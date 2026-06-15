@@ -76,7 +76,7 @@ export default function SignUp() {
 
         <p style={{ color: '#3b2410', fontSize: '13px', textAlign: 'center', marginTop: '1.5rem' }}>
           Already have an account?{' '}
-          <a href="/login" style={{ color: '#5c3d22' }}>Log in</a>
+            <a href="/login" style={{ color: '#8a5c35' }}>Log in</a>
         </p>
       </div>
     </main>

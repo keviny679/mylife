@@ -8,14 +8,15 @@ export default function Home() {
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-48 pointer-events-none" style={{ background: 'radial-gradient(circle, rgba(220,80,10,0.06) 0%, transparent 70%)' }} />
 
       <div className="relative z-10 flex flex-col items-center text-center px-6">
-        <h1 style={{ fontFamily: 'var(--font-lora)', color: '#e8956d', fontSize: '48px', marginBottom: '12px' }}>MyLife</h1>
-        <p style={{ fontFamily: 'var(--font-lora)', color: '#5c3d22', fontSize: '18px', fontStyle: 'italic', marginBottom: '48px' }}>Your private space to reflect.</p>
+        <h1 style={{ fontFamily: 'var(--font-lora)', color: '#e8956d', fontSize: '52px', marginBottom: '16px' }}>MyLife</h1>
+        <p style={{ fontFamily: 'var(--font-lora)', color: '#5c3d22', fontSize: '18px', fontStyle: 'italic', marginBottom: '8px' }}>Your private space to reflect.</p>
+        <p style={{ fontFamily: 'var(--font-lora)', color: '#3b2410', fontSize: '14px', marginBottom: '52px' }}>Write at the end of the day. Just for you.</p>
 
-        <div className="flex flex-col gap-3 w-full max-w-xs">
-          <Link href="/signup" style={{ display: 'block', width: '100%', padding: '14px', borderRadius: '8px', background: '#c45e2a', color: '#140d05', fontWeight: '500', fontSize: '15px', fontFamily: 'var(--font-lora)', textAlign: 'center', textDecoration: 'none' }}>
+        <div className="flex flex-col gap-3" style={{ width: '240px' }}>
+          <Link href="/signup" style={{ display: 'block', width: '100%', padding: '13px', borderRadius: '8px', background: '#c45e2a', color: '#140d05', fontWeight: '500', fontSize: '15px', fontFamily: 'var(--font-lora)', textAlign: 'center', textDecoration: 'none' }}>
             Start writing
           </Link>
-          <Link href="/login" style={{ display: 'block', width: '100%', padding: '14px', borderRadius: '8px', background: 'transparent', color: '#5c3d22', fontSize: '15px', fontFamily: 'var(--font-lora)', textAlign: 'center', textDecoration: 'none', border: '1px solid #3b2410' }}>
+          <Link href="/login" style={{ display: 'block', width: '100%', padding: '13px', borderRadius: '8px', background: 'transparent', color: '#8a5c35', fontSize: '15px', fontFamily: 'var(--font-lora)', textAlign: 'center', textDecoration: 'none', border: '1px solid #3b2410' }}>
             Log in
           </Link>
         </div>

@@ -14,10 +14,7 @@ export default function Login() {
   async function handleLogin() {
     setLoading(true)
 
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    })
+    const { error } = await supabase.auth.signInWithPassword({ email, password })
 
     if (error) {
       setMessage(error.message)
@@ -29,37 +26,46 @@ export default function Login() {
   }
 
   return (
-    <main className="min-h-screen bg-gray-950 text-white flex flex-col items-center justify-center">
-      <div className="w-full max-w-md p-8 bg-gray-900 rounded-xl">
-        <h1 className="text-2xl font-bold mb-6">Welcome back</h1>
+    <main className="min-h-screen relative overflow-hidden flex items-center justify-center" style={{ background: '#140d05' }}>
+      <div className="absolute bottom-0 left-0 w-96 h-96 rounded-full pointer-events-none" style={{ background: 'radial-gradient(circle, rgba(255,100,20,0.07) 0%, transparent 70%)' }} />
+      <div className="absolute top-0 right-0 w-72 h-72 rounded-full pointer-events-none" style={{ background: 'radial-gradient(circle, rgba(255,140,30,0.05) 0%, transparent 70%)' }} />
 
-        <input
-          type="email"
-          placeholder="Email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          className="w-full p-3 mb-4 bg-gray-800 rounded-lg text-white placeholder-gray-500"
-        />
+      <div className="relative z-10 w-full max-w-md px-6">
+        <h1 style={{ fontFamily: 'var(--font-lora)', color: '#e8956d', fontSize: '28px', textAlign: 'center', marginBottom: '8px' }}>MyLife</h1>
+        <p style={{ color: '#5c3d22', fontSize: '14px', textAlign: 'center', marginBottom: '2rem', fontFamily: 'var(--font-lora)', fontStyle: 'italic' }}>Welcome back</p>
 
-        <input
-          type="password"
-          placeholder="Password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          className="w-full p-3 mb-6 bg-gray-800 rounded-lg text-white placeholder-gray-500"
-        />
+        <div className="rounded-xl p-8" style={{ background: '#1c1007', border: '1px solid #3b2410' }}>
+          <input
+            type="email"
+            placeholder="Email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            style={{ width: '100%', background: '#140d05', border: '1px solid #3b2410', borderRadius: '8px', color: '#f0d4b0', fontFamily: 'var(--font-lora)', fontSize: '15px', padding: '12px', marginBottom: '12px', outline: 'none', boxSizing: 'border-box' }}
+          />
+          <input
+            type="password"
+            placeholder="Password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            style={{ width: '100%', background: '#140d05', border: '1px solid #3b2410', borderRadius: '8px', color: '#f0d4b0', fontFamily: 'var(--font-lora)', fontSize: '15px', padding: '12px', marginBottom: '20px', outline: 'none', boxSizing: 'border-box' }}
+          />
+          <button
+            onClick={handleLogin}
+            disabled={loading}
+            style={{ width: '100%', padding: '12px', borderRadius: '8px', background: '#c45e2a', color: '#140d05', border: 'none', cursor: 'pointer', fontWeight: '500', fontSize: '15px', fontFamily: 'var(--font-lora)' }}
+          >
+            {loading ? 'Logging in...' : 'Log in'}
+          </button>
 
-        <button
-          onClick={handleLogin}
-          disabled={loading}
-          className="w-full p-3 bg-indigo-600 hover:bg-indigo-500 rounded-lg font-medium transition-colors"
-        >
-          {loading ? 'Logging in...' : 'Log In'}
-        </button>
+          {message && (
+            <p style={{ color: '#e8956d', fontSize: '13px', textAlign: 'center', marginTop: '1rem' }}>{message}</p>
+          )}
+        </div>
 
-        {message && (
-          <p className="mt-4 text-center text-red-400">{message}</p>
-        )}
+        <p style={{ color: '#3b2410', fontSize: '13px', textAlign: 'center', marginTop: '1.5rem' }}>
+          Don't have an account?{' '}
+          <a href="/signup" style={{ color: '#5c3d22' }}>Sign up</a>
+        </p>
       </div>
     </main>
   )

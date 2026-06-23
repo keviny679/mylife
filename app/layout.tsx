@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Lora } from "next/font/google";
 import "./globals.css";
+import { ThemeProvider } from "@/lib/theme-context";
 
 const lora = Lora({
   subsets: ["latin"],
@@ -19,7 +20,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={`${lora.variable} h-full`}>
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">
+        <ThemeProvider>{children}</ThemeProvider>
+      </body>
     </html>
   );
 }

@@ -7,6 +7,7 @@ import { useTheme, modeOptions, Mode } from '@/lib/theme-context'
 import { supabase } from '@/lib/supabase'
 
 const navItems = [
+  { label: 'Community', href: '/community', icon: '🌍' },
   { label: 'Journal', href: '/journal', icon: '✏️' },
   { label: 'Memories', href: '/memories', icon: '📖' },
   { label: 'Profile', href: '/profile', icon: '👤' },

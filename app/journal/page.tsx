@@ -79,25 +79,56 @@ export default function Journal() {
     getUser()
   }, [])
 
-  async function handleSaveEntry() {
-    if (!body.trim()) return
-    setSaving(true)
-    const { error } = await supabase.from('entries').insert({
-      user_id: user.id,
-      title: title.trim() || null,
-      body: body.trim(),
-      mood: mood || null,
-    })
-    if (!error) {
-      setTitle(''); setBody(''); setMood('')
-      const { data } = await supabase
-        .from('entries').select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false })
-      setEntries(data || [])
-    }
-    setSaving(false)
+async function handleSaveEntry() {
+  if (!body.trim()) return
+
+  // Surface-level protection 1 — body length cap
+  // Prevents massive entries from filling the database
+  if (body.length > 50000) {
+    alert('Entry is too long. Please keep it under 50,000 characters.')
+    return
   }
+
+  setSaving(true)
+
+  // Surface-level protection 2 — rate limiting
+  // Check how many entries this user has created in the last hour
+  const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString()
+  const { count } = await supabase
+    .from('entries')
+    .select('*', { count: 'exact', head: true })
+    .eq('user_id', user.id)
+    .gte('created_at', oneHourAgo)
+
+  if (count && count >= 10) {
+    alert('You\'ve written a lot in the last hour. Take a breath and come back soon.')
+    setSaving(false)
+    return
+  }
+
+  const { error } = await supabase.from('entries').insert({
+    user_id: user.id,
+    title: title.trim() || null,
+    body: body.trim(),
+    mood: mood || null,
+  })
+
+  if (!error) {
+    setTitle('')
+    setBody('')
+    setMood('')
+
+    const { data } = await supabase
+      .from('entries')
+      .select('*')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false })
+
+    setEntries(data || [])
+  }
+
+  setSaving(false)
+}
 
   if (loading) {
     return (
@@ -223,7 +254,7 @@ export default function Journal() {
             rows={6}
             style={{ width: '100%', background: 'transparent', border: 'none', color: t.bodyText, fontFamily: 'var(--font-lora)', fontSize: '16px', lineHeight: '1.9', resize: 'none', outline: 'none', boxSizing: 'border-box' }}
           />
-          <div className="flex justify-between items-center mt-4 pt-4" style={{ borderTop: `1px solid ${t.cardBorder}` }}>
+          <div className="flex flex-col gap-3 mt-4 pt-4" style={{ borderTop: `1px solid ${t.cardBorder}` }}>
             <div className="flex gap-2 flex-wrap">
               {moods.map((m) => (
                 <button

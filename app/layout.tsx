@@ -4,6 +4,7 @@ import "./globals.css";
 import { ThemeProvider } from "@/lib/theme-context";
 import { AudioProvider } from "@/lib/audio-context";
 import AudioPlayer from "@/components/AudioPlayer";
+import NavDrawer from "@/components/NavDrawer";
 
 const lora = Lora({
   subsets: ["latin"],
@@ -25,6 +26,7 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col">
         <ThemeProvider>
           <AudioProvider>
+            <NavDrawer />
             {children}
             <AudioPlayer />
           </AudioProvider>

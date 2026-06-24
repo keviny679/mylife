@@ -8,6 +8,35 @@ import { useTheme } from '@/lib/theme-context'
 
 const moods = ['😌 calm', '🌧 reflective', '😊 grateful', '😔 hard day', '⚡ energized']
 
+function calculateStreak(entries: any[]): number {
+  if (entries.length === 0) return 0
+
+  
+  const uniqueDates = [...new Set(
+    entries.map(e => new Date(e.created_at).toLocaleDateString('en-CA'))
+  )].sort((a, b) => b.localeCompare(a))
+
+  const today = new Date().toLocaleDateString('en-CA')
+  const yesterday = new Date(Date.now() - 86400000).toLocaleDateString('en-CA')
+
+  if (uniqueDates[0] !== today && uniqueDates[0] !== yesterday) return 0
+
+  let streak = 0
+  let current = new Date(uniqueDates[0])
+
+  for (const date of uniqueDates) {
+    const expected = current.toLocaleDateString('en-CA')
+    if (date === expected) {
+      streak++
+      current = new Date(current.getTime() - 86400000)
+    } else {
+      break
+    }
+  }
+
+  return streak
+}
+
 export default function Journal() {
   const [user, setUser] = useState<any>(null)
   const [entries, setEntries] = useState<any[]>([])
@@ -86,6 +115,8 @@ export default function Journal() {
     )
   }
 
+  const streak = calculateStreak(entries)
+
   return (
     <main className="min-h-screen relative overflow-hidden transition-colors duration-500" style={{ background: t.bg }}>
       <div className="absolute bottom-0 left-0 w-96 h-96 rounded-full pointer-events-none transition-colors duration-500" style={{ background: `radial-gradient(circle, ${t.glow1} 0%, transparent 70%)` }} />
@@ -148,10 +179,29 @@ export default function Journal() {
             </button>
           </div>
         </div>
-
-        <p style={{ color: t.textMuted, fontSize: '13px', textAlign: 'center', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: '1.5rem' }}>
-          {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
+        
+        {/* 
+        STREAK COUNTER
+        calculateStreak() lives above the component — computes consecutive days written.
+        Three states: no entries (null), active streak (fire + count), broken streak (nudge message).
+        Edge case: streak stays alive if last entry was yesterday, not just today.
+        To improve: animate the number, add milestone celebrations (7 days, 30 days, etc.)
+        */}
+        
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '1.5rem', gap: '6px' }}>
+        <p style={{ color: t.textMuted, fontSize: '13px', textAlign: 'center', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+            {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
         </p>
+        {entries.length === 0 ? null : streak > 0 ? (
+            <p style={{ color: t.accent, fontSize: '13px', letterSpacing: '0.05em' }}>
+            🔥 {streak} day{streak === 1 ? '' : 's'} in a row
+            </p>
+        ) : (
+            <p style={{ color: t.textDim, fontSize: '13px', letterSpacing: '0.05em', fontStyle: 'italic', fontFamily: 'var(--font-lora)' }}>
+            write tonight to start a streak
+            </p>
+        )}
+        </div>
 
         <div className="rounded-xl p-6 mb-6 transition-colors duration-500" style={{ background: t.cardBg, border: `1px solid ${t.cardBorder}` }}>
           <input

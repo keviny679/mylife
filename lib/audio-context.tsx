@@ -9,13 +9,13 @@ export interface Track {
 }
 
 export const playlist: Track[] = [
-  { id: 1, title: 'I Gave It My All', file: '/audio/i gave it my all.mp3' },
-  { id: 2, title: 'Distant Thunder', file: '/audio/rain-2.mp3' },
-  { id: 3, title: 'Evening Downpour', file: '/audio/rain-3.mp3' },
-  { id: 4, title: 'Soft Drizzle', file: '/audio/rain-4.mp3' },
-  { id: 5, title: 'Storm at Night', file: '/audio/rain-5.mp3' },
-  { id: 6, title: 'Window Rain', file: '/audio/rain-6.mp3' },
-  { id: 7, title: 'Forest Rain', file: '/audio/rain-7.mp3' },
+  { id: 1, title: 'I Gave It My All', file: '/audio/I Gave It My All.mp3' },
+  { id: 2, title: 'For The Nights You Feel Behind', file: '/audio/For The Nights You Feel Behind.mp3' },
+  { id: 3, title: 'I Believe In You', file: '/audio/I Believe In You.mp3' },
+  { id: 4, title: 'I Think I Found Peace', file: '/audio/I Think I Found Peace.mp3' },
+  { id: 5, title: 'I Want To Be Excited For Tomorrow', file: '/audio/I Want To Be Excited For Tomorrow.mp3' },
+  { id: 6, title: 'I Want To Smile Like The Strangers On The Street', file: '/audio/I Want To Smile Like The Strangers On The Street.mp3' },
+  { id: 7, title: 'Intention, Not Perfection', file: '/audio/Intention, Not Perfection.mp3' },
 ]
 
 function shuffleArray<T>(arr: T[]): T[] {

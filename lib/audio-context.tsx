@@ -9,7 +9,7 @@ export interface Track {
 }
 
 export const playlist: Track[] = [
-  { id: 1, title: 'I Gave It My All', file: '/audio/I Gave It My All.mp3' },
+  { id: 1, title: 'I Gave It My All', file: '/audio/i gave it my all.mp3' },
   { id: 2, title: 'For The Nights You Feel Behind', file: '/audio/For The Nights You Feel Behind.mp3' },
   { id: 3, title: 'I Believe In You', file: '/audio/I Believe In You.mp3' },
   { id: 4, title: 'I Think I Found Peace', file: '/audio/I Think I Found Peace.mp3' },

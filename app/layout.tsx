@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { Lora } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/lib/theme-context";
+import { AudioProvider } from "@/lib/audio-context";
+import AudioPlayer from "@/components/AudioPlayer";
 
 const lora = Lora({
   subsets: ["latin"],
@@ -21,7 +23,12 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${lora.variable} h-full`}>
       <body className="min-h-full flex flex-col">
-        <ThemeProvider>{children}</ThemeProvider>
+        <ThemeProvider>
+          <AudioProvider>
+            {children}
+            <AudioPlayer />
+          </AudioProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

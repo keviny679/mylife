@@ -3,20 +3,19 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { useTheme } from '@/lib/theme-context'
+import { useTheme, modeOptions, Mode } from '@/lib/theme-context'
 import { supabase } from '@/lib/supabase'
 
 const navItems = [
   { label: 'Journal', href: '/journal', icon: '✏️' },
   { label: 'Memories', href: '/memories', icon: '📖' },
   { label: 'Profile', href: '/profile', icon: '👤' },
-  { label: 'Settings', href: '/settings', icon: '⚙️' },
 ]
 
 export default function NavDrawer() {
   const [open, setOpen] = useState(false)
   const [authed, setAuthed] = useState(false)
-  const { t, mode, toggleMode } = useTheme()
+  const { t, mode, setMode } = useTheme()
   const pathname = usePathname()
   const router = useRouter()
 
@@ -38,11 +37,12 @@ export default function NavDrawer() {
     setOpen(false)
   }
 
-  if (!authed) return null
+  const authPages = ['/login', '/signup']
+  if (!authed || authPages.includes(pathname)) return null
 
   return (
     <>
-      {/* Hamburger button — fixed top left, only shown when logged in */}
+      {/* Hamburger button */}
       <button
         onClick={() => setOpen(true)}
         style={{
@@ -59,12 +59,12 @@ export default function NavDrawer() {
           padding: '4px',
         }}
       >
-        <span style={{ display: 'block', width: '20px', height: '1.5px', background: t.textMuted, transition: 'background 0.2s ease' }} />
-        <span style={{ display: 'block', width: '20px', height: '1.5px', background: t.textMuted, transition: 'background 0.2s ease' }} />
-        <span style={{ display: 'block', width: '20px', height: '1.5px', background: t.textMuted, transition: 'background 0.2s ease' }} />
+        <span style={{ display: 'block', width: '20px', height: '1.5px', background: t.textMuted }} />
+        <span style={{ display: 'block', width: '20px', height: '1.5px', background: t.textMuted }} />
+        <span style={{ display: 'block', width: '20px', height: '1.5px', background: t.textMuted }} />
       </button>
 
-      {/* Backdrop — clicking outside closes drawer */}
+      {/* Backdrop */}
       {open && (
         <div
           onClick={() => setOpen(false)}
@@ -95,6 +95,7 @@ export default function NavDrawer() {
           transform: open ? 'translateX(0)' : 'translateX(-100%)',
           transition: 'transform 0.3s ease',
           boxShadow: open ? '4px 0 24px rgba(0,0,0,0.4)' : 'none',
+          overflowY: 'auto',
         }}
       >
         {/* Logo */}
@@ -114,7 +115,7 @@ export default function NavDrawer() {
         </Link>
 
         {/* Nav items */}
-        <nav style={{ display: 'flex', flexDirection: 'column', gap: '4px', flex: 1 }}>
+        <nav style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginBottom: '2rem' }}>
           {navItems.map((item) => {
             const isActive = pathname === item.href
             return (
@@ -136,12 +137,8 @@ export default function NavDrawer() {
                   border: isActive ? `1px solid ${t.cardBorder}` : '1px solid transparent',
                   transition: 'all 0.2s ease'
                 }}
-                onMouseEnter={(e) => {
-                  if (!isActive) e.currentTarget.style.color = t.accent
-                }}
-                onMouseLeave={(e) => {
-                  if (!isActive) e.currentTarget.style.color = t.textMuted
-                }}
+                onMouseEnter={(e) => { if (!isActive) e.currentTarget.style.color = t.accent }}
+                onMouseLeave={(e) => { if (!isActive) e.currentTarget.style.color = t.textMuted }}
               >
                 <span style={{ fontSize: '16px' }}>{item.icon}</span>
                 {item.label}
@@ -150,28 +147,58 @@ export default function NavDrawer() {
           })}
         </nav>
 
-        {/* Bottom — theme toggle and sign out */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-          <button
-            onClick={() => { toggleMode(); setOpen(false) }}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px',
-              padding: '10px 12px',
-              borderRadius: '8px',
-              background: 'none',
-              border: `1px solid ${t.cardBorder}`,
-              color: t.textMuted,
-              fontSize: '14px',
-              cursor: 'pointer',
-              fontFamily: 'var(--font-lora)',
-              transition: 'all 0.2s ease'
-            }}
-          >
-            {mode === 'fire' ? '🔥 Firelight' : '🌧 Rain'}
-          </button>
+        {/*
+          ATMOSPHERE PICKER
+          Five moods to set the vibe for writing tonight.
+          Each one changes the full color palette globally.
+          To improve: animate transition between themes, pair each with a playlist mood.
+        */}
+        <div style={{ marginBottom: '2rem' }}>
+          <p style={{
+            fontSize: '11px',
+            color: t.textDim,
+            letterSpacing: '0.1em',
+            textTransform: 'uppercase',
+            marginBottom: '10px',
+            paddingLeft: '4px'
+          }}>
+            Atmosphere
+          </p>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+            {modeOptions.map((option) => {
+              const isActive = mode === option.mode
+              return (
+                <button
+                  key={option.mode}
+                  onClick={() => { setMode(option.mode as Mode); setOpen(false) }}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '10px',
+                    padding: '10px 12px',
+                    borderRadius: '8px',
+                    background: isActive ? t.entryBg : 'transparent',
+                    border: isActive ? `1px solid ${t.accent}` : '1px solid transparent',
+                    color: isActive ? t.accent : t.textMuted,
+                    fontSize: '14px',
+                    fontFamily: 'var(--font-lora)',
+                    cursor: 'pointer',
+                    textAlign: 'left',
+                    transition: 'all 0.2s ease'
+                  }}
+                  onMouseEnter={(e) => { if (!isActive) e.currentTarget.style.color = t.accent }}
+                  onMouseLeave={(e) => { if (!isActive) e.currentTarget.style.color = t.textMuted }}
+                >
+                  <span style={{ fontSize: '16px' }}>{option.emoji}</span>
+                  {option.label}
+                </button>
+              )
+            })}
+          </div>
+        </div>
 
+        {/* Sign out — bottom */}
+        <div style={{ marginTop: 'auto' }}>
           <button
             onClick={handleSignOut}
             style={{
@@ -187,7 +214,8 @@ export default function NavDrawer() {
               cursor: 'pointer',
               fontFamily: 'var(--font-lora)',
               transition: 'color 0.2s ease',
-              textAlign: 'left'
+              textAlign: 'left',
+              width: '100%'
             }}
             onMouseEnter={(e) => e.currentTarget.style.color = '#e05555'}
             onMouseLeave={(e) => e.currentTarget.style.color = t.textDim}

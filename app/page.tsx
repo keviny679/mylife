@@ -8,7 +8,7 @@ import { useTheme } from '@/lib/theme-context'
 
 export default function Home() {
   const router = useRouter()
-  const { t, mode, toggleMode } = useTheme()
+  const { t, mode, setMode } = useTheme()
   const [checking, setChecking] = useState(true)
 
   useEffect(() => {

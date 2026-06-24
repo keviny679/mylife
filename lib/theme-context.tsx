@@ -1,6 +1,6 @@
 'use client'
 
-import { createContext, useContext, useState, ReactNode } from 'react'
+import { createContext, useContext, useState, ReactNode, useEffect} from 'react'
 
 export const themes = {
   fire: {
@@ -56,12 +56,16 @@ const ThemeContext = createContext<{
 })
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
-  const [mode, setMode] = useState<Mode>(() => {
-    if (typeof window !== 'undefined') {
-      return (localStorage.getItem('mylife-theme') as Mode) || 'fire'
+  const [mode, setMode] = useState<Mode>('rain')
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    const saved = localStorage.getItem('mylife-theme') as Mode
+    if (saved) {
+      setMode(saved)
     }
-    return 'fire'
-  })
+    setMounted(true)
+  }, [])
 
   function toggleMode() {
     setMode((prev) => {
@@ -69,6 +73,14 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
       localStorage.setItem('mylife-theme', next)
       return next
     })
+  }
+
+  if (!mounted) {
+    return (
+      <ThemeContext.Provider value={{ mode: 'rain', toggleMode, t: themes['rain'] }}>
+        {children}
+      </ThemeContext.Provider>
+    )
   }
 
   return (

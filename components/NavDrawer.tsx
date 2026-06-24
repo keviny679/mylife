@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { useTheme } from '@/lib/theme-context'
@@ -15,9 +15,22 @@ const navItems = [
 
 export default function NavDrawer() {
   const [open, setOpen] = useState(false)
+  const [authed, setAuthed] = useState(false)
   const { t, mode, toggleMode } = useTheme()
   const pathname = usePathname()
   const router = useRouter()
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setAuthed(!!session)
+    })
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setAuthed(!!session)
+    })
+
+    return () => subscription.unsubscribe()
+  }, [])
 
   async function handleSignOut() {
     await supabase.auth.signOut()
@@ -25,9 +38,11 @@ export default function NavDrawer() {
     setOpen(false)
   }
 
+  if (!authed) return null
+
   return (
     <>
-      {/* Hamburger button — fixed top left */}
+      {/* Hamburger button — fixed top left, only shown when logged in */}
       <button
         onClick={() => setOpen(true)}
         style={{

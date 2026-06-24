@@ -33,27 +33,7 @@ export default function Home() {
     <main className="min-h-screen relative overflow-hidden flex flex-col items-center justify-center transition-colors duration-500" style={{ background: t.bg }}>
       <div className="absolute bottom-0 left-0 w-96 h-96 rounded-full pointer-events-none" style={{ background: `radial-gradient(circle, ${t.glow1} 0%, transparent 70%)` }} />
       <div className="absolute top-0 right-0 w-72 h-72 rounded-full pointer-events-none" style={{ background: `radial-gradient(circle, ${t.glow2} 0%, transparent 70%)` }} />
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-48 pointer-events-none" style={{ background: `radial-gradient(circle, ${t.glow3} 0%, transparent 70%)` }} />
-
-      <div className="absolute top-6 right-6">
-        <button
-          onClick={toggleMode}
-          style={{
-            fontSize: '13px',
-            color: t.textMuted,
-            background: t.cardBg,
-            border: `1px solid ${t.cardBorder}`,
-            borderRadius: '20px',
-            padding: '6px 14px',
-            cursor: 'pointer',
-            transition: 'all 0.2s ease'
-          }}
-        >
-          {mode === 'fire' ? '🔥 firelight' : '🌧 rain'}
-        </button>
-      </div>
-
-      <div className="relative z-10 flex flex-col items-center text-center px-6">
+<div className="absolute pointer-events-none transition-colors duration-500" style={{ top: 0, left: '50%', width: '600px', height: '600px', transform: 'translate(-50%, -60%)', borderRadius: '50%', background: `radial-gradient(circle, ${t.glow3} 0%, transparent 70%)` }} />      <div className="relative z-10 flex flex-col items-center text-center px-6">
         <h1 style={{ fontFamily: 'var(--font-lora)', color: t.accent, fontSize: '52px', marginBottom: '16px' }}>MyLife</h1>
         <p style={{ fontFamily: 'var(--font-lora)', color: t.textMuted, fontSize: '18px', fontStyle: 'italic', marginBottom: '8px' }}>Your private space to reflect.</p>
         <p style={{ color: t.textFaint, fontSize: '14px', marginBottom: '48px' }}>Write at the end of the day. Just for you.</p>

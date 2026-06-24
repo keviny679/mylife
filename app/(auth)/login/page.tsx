@@ -45,6 +45,7 @@ export default function Login() {
             style={{ width: '100%', background: t.inputBg, border: `1px solid ${t.cardBorder}`, borderRadius: '8px', color: t.inputText, fontFamily: 'var(--font-lora)', fontSize: '15px', padding: '12px', marginBottom: '12px', outline: 'none', boxSizing: 'border-box' }}
           />
           <input
+            onKeyDown={(e) => { if (e.key === 'Enter') handleLogin() }}
             type="password"
             placeholder="Password"
             value={password}

@@ -115,8 +115,7 @@ export default function EntryDetail({ params }: { params: Promise<{ id: string }
     <main className="min-h-screen relative overflow-hidden" style={{ background: t.bg }}>
       <div className="absolute bottom-0 left-0 w-96 h-96 rounded-full pointer-events-none" style={{ background: `radial-gradient(circle, ${t.glow1} 0%, transparent 70%)` }} />
       <div className="absolute top-0 right-0 w-72 h-72 rounded-full pointer-events-none" style={{ background: `radial-gradient(circle, ${t.glow2} 0%, transparent 70%)` }} />
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-48 pointer-events-none" style={{ background: `radial-gradient(circle, ${t.glow3} 0%, transparent 70%)` }} />
-
+<div className="absolute pointer-events-none transition-colors duration-500" style={{ top: 0, left: '50%', width: '600px', height: '600px', transform: 'translate(-50%, -60%)', borderRadius: '50%', background: `radial-gradient(circle, ${t.glow3} 0%, transparent 70%)` }} />
       <div className="relative z-10 max-w-xl mx-auto px-6 py-10">
 
         {/* Back link */}

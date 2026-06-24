@@ -9,13 +9,13 @@ export interface Track {
 }
 
 export const playlist: Track[] = [
-  { id: 1, title: 'I Gave It My All', file: '/audio/i gave it my all.mp3' },
-  { id: 2, title: 'For The Nights You Feel Behind', file: '/audio/For The Nights You Feel Behind.mp3' },
-  { id: 3, title: 'I Believe In You', file: '/audio/I Believe In You.mp3' },
-  { id: 4, title: 'I Think I Found Peace', file: '/audio/I Think I Found Peace.mp3' },
-  { id: 5, title: 'I Want To Be Excited For Tomorrow', file: '/audio/I Want To Be Excited For Tomorrow.mp3' },
-  { id: 6, title: 'I Want To Smile Like The Strangers On The Street', file: '/audio/I Want To Smile Like The Strangers On The Street.mp3' },
-  { id: 7, title: 'Intention, Not Perfection', file: '/audio/Intention, Not Perfection.mp3' },
+  { id: 1, title: 'I Gave It My All', file: '/audio/IGaveItMyAll.mp3' },
+  { id: 2, title: 'For The Nights You Feel Behind', file: '/audio/ForTheNightsYouFeelBehind.mp3' },
+  { id: 3, title: 'I Believe In You', file: '/audio/IBelieveInYou.mp3' },
+  { id: 4, title: 'I Think I Found Peace', file: '/audio/IThinkIFoundPeace.mp3' },
+  { id: 5, title: 'I Want To Be Excited For Tomorrow', file: '/audio/IWantToBeExcitedForTomorrow.mp3' },
+  { id: 6, title: 'I Want To Smile Like The Strangers On The Street', file: '/audio/IWantToSmileLikeTheStrangersOnTheStreet.mp3' },
+  { id: 7, title: 'Intention, Not Perfection', file: '/audio/IntentionNotPerfection.mp3' },
 ]
 
 function shuffleArray<T>(arr: T[]): T[] {

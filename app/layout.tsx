@@ -5,7 +5,7 @@ import { ThemeProvider } from "@/lib/theme-context";
 import { AudioProvider } from "@/lib/audio-context";
 import AudioPlayer from "@/components/AudioPlayer";
 import NavDrawer from "@/components/NavDrawer";
-import { Analytics } from '@vercel/analytics/react'
+import { Analytics } from '@vercel/analytics/next'
 
 const lora = Lora({
   subsets: ["latin"],

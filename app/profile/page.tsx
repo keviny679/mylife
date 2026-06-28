@@ -105,7 +105,7 @@ export default function Profile() {
   if (loading) {
     return (
       <main className="min-h-screen flex items-center justify-center" style={{ background: t.bg }}>
-        <p style={{ color: t.textFaint, fontFamily: 'var(--font-lora)' }}>Loading...</p>
+        <p style={{ color: t.textFaint, fontFamily: 'var(--font-lora)', fontStyle: 'italic' }}>Loading...</p>
       </main>
     )
   }
@@ -118,63 +118,110 @@ export default function Profile() {
 
       <div className="relative z-10 max-w-2xl mx-auto px-6 py-10">
 
-        {/* Avatar + name + email */}
-        <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
-          <div style={{
-            width: '72px', height: '72px', borderRadius: '50%',
-            background: t.cardBg, border: `1px solid ${t.cardBorder}`,
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            margin: '0 auto 1.25rem', fontFamily: 'var(--font-lora)',
-            color: t.accent, fontSize: '28px',
-          }}>
-            {profile?.display_name?.[0]?.toUpperCase() || '?'}
-          </div>
-
+        {/* Header — name large, email and member since quiet below */}
+        <div style={{ marginBottom: '2.5rem' }}>
           {editing ? (
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', marginBottom: '6px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '6px' }}>
               <input
                 value={newName}
                 onChange={(e) => setNewName(e.target.value)}
                 onKeyDown={(e) => { if (e.key === 'Enter') handleSaveName() }}
                 autoFocus
-                style={{ background: 'transparent', border: 'none', borderBottom: `1px solid ${t.cardBorder}`, color: t.inputText, fontFamily: 'var(--font-lora)', fontSize: '22px', textAlign: 'center', outline: 'none', padding: '0 0 4px' }}
+                style={{
+                  background: 'transparent', border: 'none',
+                  borderBottom: `1px solid ${t.cardBorder}`,
+                  color: t.inputText, fontFamily: 'var(--font-lora)',
+                  fontSize: '28px', fontWeight: '600',
+                  letterSpacing: '-0.01em',
+                  outline: 'none', padding: '0 0 4px',
+                  flex: 1,
+                }}
               />
-              <button onClick={handleSaveName} disabled={saving} style={{ background: t.accentStrong, color: t.bg, border: 'none', borderRadius: '6px', padding: '4px 12px', cursor: 'pointer', fontSize: '12px', fontFamily: 'var(--font-lora)' }}>
-                {saving ? '...' : 'Save'}
+              <button
+                onClick={handleSaveName}
+                disabled={saving}
+                style={{
+                  background: t.accent, color: t.bg, border: 'none',
+                  borderRadius: '3px', padding: '5px 12px',
+                  cursor: 'pointer', fontSize: '11px',
+                  fontFamily: 'var(--font-lora)', letterSpacing: '0.04em',
+                }}
+              >
+                {saving ? '...' : 'save'}
               </button>
-              <button onClick={() => { setEditing(false); setNewName(profile?.display_name || '') }} style={{ background: 'none', color: t.textDim, border: 'none', cursor: 'pointer', fontSize: '12px', fontFamily: 'var(--font-lora)' }}>
-                Cancel
+              <button
+                onClick={() => { setEditing(false); setNewName(profile?.display_name || '') }}
+                style={{
+                  background: 'none', color: t.textDim, border: 'none',
+                  cursor: 'pointer', fontSize: '11px', fontFamily: 'var(--font-lora)',
+                }}
+              >
+                cancel
               </button>
             </div>
           ) : (
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', marginBottom: '6px' }}>
-              <h1 style={{ fontFamily: 'var(--font-lora)', color: t.accent, fontSize: '22px', fontWeight: '500' }}>
+            <div style={{ display: 'flex', alignItems: 'baseline', gap: '10px', marginBottom: '6px' }}>
+              <h1 style={{
+                fontFamily: 'var(--font-lora)',
+                color: t.inputText,
+                fontSize: '28px',
+                fontWeight: '600',
+                letterSpacing: '-0.01em',
+              }}>
                 {profile?.display_name || 'Anonymous'}
               </h1>
-              <button onClick={() => setEditing(true)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: t.textDim, fontSize: '12px', transition: 'color 0.2s ease' }}
+              <button
+                onClick={() => setEditing(true)}
+                style={{
+                  background: 'none', border: 'none', cursor: 'pointer',
+                  color: t.textDim, fontSize: '13px',
+                  transition: 'color 0.15s ease', padding: 0,
+                }}
                 onMouseEnter={(e) => e.currentTarget.style.color = t.accent}
                 onMouseLeave={(e) => e.currentTarget.style.color = t.textDim}
-              >✎</button>
+              >
+                ✎
+              </button>
             </div>
           )}
-
-          <p style={{ color: t.textFaint, fontSize: '13px', fontFamily: 'var(--font-lora)' }}>{profile?.email}</p>
-          <p style={{ color: t.textDim, fontSize: '12px', marginTop: '4px', letterSpacing: '0.05em' }}>member since {memberSince}</p>
+          <p style={{
+            color: t.textFaint, fontSize: '12px',
+            fontFamily: 'var(--font-lora)', fontStyle: 'italic',
+          }}>
+            {profile?.email} · member since {memberSince}
+          </p>
         </div>
 
-        {/* Stats strip — 4 boxes */}
-        <div style={{ display: 'flex', gap: '1px', marginBottom: '1.5rem', background: t.cardBorder, borderRadius: '12px', overflow: 'hidden', border: `1px solid ${t.cardBorder}` }}>
+        {/* Stats — same borderline style as memories */}
+        <div style={{
+          display: 'flex',
+          borderTop: `1px solid ${t.cardBorder}`,
+          borderBottom: `1px solid ${t.cardBorder}`,
+          marginBottom: '2rem',
+        }}>
           {[
-            { label: 'Entries', value: String(entries.length) },
-            { label: 'Words', value: totalWords.toLocaleString() },
-            { label: 'Streak', value: streak > 0 ? `${streak}d` : '—' },
-            { label: 'Best streak', value: longestStreak > 0 ? `${longestStreak}d` : '—' },
-          ].map((stat) => (
-            <div key={stat.label} style={{ flex: 1, padding: '16px', background: t.cardBg, textAlign: 'center' }}>
-              <p style={{ fontFamily: 'var(--font-lora)', color: t.accent, fontSize: '18px', fontWeight: '500', marginBottom: '4px' }}>
+            { label: 'entries', value: String(entries.length) },
+            { label: 'words', value: totalWords.toLocaleString() },
+            { label: 'streak', value: streak > 0 ? `${streak}d` : '—' },
+            { label: 'best', value: longestStreak > 0 ? `${longestStreak}d` : '—' },
+          ].map((stat, i) => (
+            <div key={stat.label} style={{
+              flex: 1, padding: '14px 0', textAlign: 'center',
+              borderLeft: i > 0 ? `1px solid ${t.cardBorder}` : 'none',
+            }}>
+              <p style={{
+                fontFamily: 'var(--font-lora)',
+                color: t.inputText,
+                fontSize: '18px',
+                fontWeight: '500',
+                marginBottom: '3px',
+              }}>
                 {stat.value}
               </p>
-              <p style={{ color: t.textDim, fontSize: '11px', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+              <p style={{
+                color: t.textDim, fontSize: '10px',
+                letterSpacing: '0.10em', textTransform: 'uppercase',
+              }}>
                 {stat.label}
               </p>
             </div>
@@ -183,60 +230,131 @@ export default function Profile() {
 
         {/* Writing habits */}
         {entries.length > 0 && (
-          <div style={{ padding: '20px 24px', background: t.cardBg, border: `1px solid ${t.cardBorder}`, borderRadius: '12px', marginBottom: '1.5rem' }}>
-            <p style={{ fontSize: '11px', color: t.textDim, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: '1.25rem' }}>
+          <div style={{ marginBottom: '1.5rem' }}>
+            <p style={{
+              fontSize: '10px', color: t.textDim,
+              letterSpacing: '0.12em', textTransform: 'uppercase',
+              marginBottom: '1rem',
+            }}>
               Writing habits
             </p>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-              {peakHour && (
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <p style={{ fontFamily: 'var(--font-lora)', color: t.textMuted, fontSize: '14px' }}>You write most often at</p>
-                  <p style={{ fontFamily: 'var(--font-lora)', color: t.accent, fontSize: '14px' }}>{formatHour(peakHour)}</p>
+            <div style={{
+              border: `1px solid ${t.cardBorder}`,
+              borderRadius: '4px',
+              overflow: 'hidden',
+              boxShadow: `0 2px 8px ${t.shadow}`,
+            }}>
+              {[
+                peakHour ? { label: 'You write most often at', value: formatHour(peakHour) } : null,
+                { label: 'Days written in last 30', value: `${uniqueRecentDays} of 30` },
+                entries.length > 0 ? { label: 'Average entry length', value: `${Math.round(totalWords / entries.length)} words` } : null,
+              ].filter(Boolean).map((row, i, arr) => (
+                <div
+                  key={row!.label}
+                  style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    padding: '12px 16px',
+                    background: i % 2 === 0 ? t.entryBg : t.cardBg,
+                    borderBottom: i < arr.length - 1 ? `1px solid ${t.entryBorder}` : 'none',
+                  }}
+                >
+                  <p style={{
+                    fontFamily: 'var(--font-lora)',
+                    color: t.textMuted,
+                    fontSize: '13px',
+                  }}>
+                    {row!.label}
+                  </p>
+                  <p style={{
+                    fontFamily: 'var(--font-lora)',
+                    color: t.inputText,
+                    fontSize: '13px',
+                    fontWeight: '500',
+                  }}>
+                    {row!.value}
+                  </p>
                 </div>
-              )}
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <p style={{ fontFamily: 'var(--font-lora)', color: t.textMuted, fontSize: '14px' }}>Days written in last 30</p>
-                <p style={{ fontFamily: 'var(--font-lora)', color: t.accent, fontSize: '14px' }}>{uniqueRecentDays} of 30</p>
-              </div>
-              {entries.length > 0 && (
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <p style={{ fontFamily: 'var(--font-lora)', color: t.textMuted, fontSize: '14px' }}>Average entry length</p>
-                  <p style={{ fontFamily: 'var(--font-lora)', color: t.accent, fontSize: '14px' }}>{Math.round(totalWords / entries.length)} words</p>
-                </div>
-              )}
+              ))}
             </div>
           </div>
         )}
 
         {/* Longest entry */}
         {longestEntry && (
-          <Link
-            href={`/journal/${longestEntry.id}`}
-            style={{ display: 'block', textDecoration: 'none', padding: '20px 24px', background: t.cardBg, border: `1px solid ${t.cardBorder}`, borderRadius: '12px', marginBottom: '1.5rem', transition: 'border-color 0.2s ease' }}
-            onMouseEnter={(e) => e.currentTarget.style.borderColor = t.accent}
-            onMouseLeave={(e) => e.currentTarget.style.borderColor = t.cardBorder}
-          >
-            <p style={{ fontSize: '11px', color: t.textDim, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: '10px' }}>
+          <div style={{ marginBottom: '1.5rem' }}>
+            <p style={{
+              fontSize: '10px', color: t.textDim,
+              letterSpacing: '0.12em', textTransform: 'uppercase',
+              marginBottom: '1rem',
+            }}>
               Your longest entry — {longestEntry.wordCount} words
             </p>
-            {longestEntry.title && (
-              <p style={{ fontFamily: 'var(--font-lora)', color: t.accent, fontSize: '16px', marginBottom: '6px', fontWeight: '500' }}>{longestEntry.title}</p>
-            )}
-            <p style={{ fontFamily: 'var(--font-lora)', color: t.textMuted, fontSize: '13px', marginBottom: '6px' }}>
-              {new Date(longestEntry.created_at).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
-            </p>
-            <p style={{ fontFamily: 'var(--font-lora)', color: t.entryBodyText, fontSize: '14px', lineHeight: '1.6', overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' as const }}>
-              {longestEntry.body}
-            </p>
-          </Link>
+            <Link
+              href={`/journal/${longestEntry.id}`}
+              style={{
+                display: 'block', textDecoration: 'none',
+                padding: '16px',
+                background: t.cardBg,
+                border: `1px solid ${t.cardBorder}`,
+                borderLeft: `2px solid ${t.accent}`,
+                borderRadius: '4px',
+                boxShadow: `0 2px 8px ${t.shadow}`,
+                transition: 'opacity 0.15s ease',
+              }}
+              onMouseEnter={(e) => e.currentTarget.style.opacity = '0.85'}
+              onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}
+            >
+              {longestEntry.title && (
+                <p style={{
+                  fontFamily: 'var(--font-lora)',
+                  color: t.inputText,
+                  fontSize: '15px',
+                  fontWeight: '500',
+                  marginBottom: '4px',
+                }}>
+                  {longestEntry.title}
+                </p>
+              )}
+              <p style={{
+                fontFamily: 'var(--font-lora)',
+                color: t.textFaint,
+                fontSize: '11px',
+                fontStyle: 'italic',
+                marginBottom: '8px',
+              }}>
+                {new Date(longestEntry.created_at).toLocaleDateString('en-US', {
+                  weekday: 'long', month: 'long', day: 'numeric', year: 'numeric'
+                })}
+              </p>
+              <p style={{
+                fontFamily: 'var(--font-lora)',
+                color: t.entryBodyText,
+                fontSize: '13px',
+                lineHeight: '1.7',
+                overflow: 'hidden',
+                display: '-webkit-box',
+                WebkitLineClamp: 2,
+                WebkitBoxOrient: 'vertical' as const,
+              }}>
+                {longestEntry.body}
+              </p>
+            </Link>
+          </div>
         )}
 
         {entries.length === 0 && (
-          <div style={{ textAlign: 'center', marginTop: '3rem' }}>
-            <p style={{ fontFamily: 'var(--font-lora)', color: t.textFaint, fontSize: '15px', fontStyle: 'italic' }}>
-              Start writing to see your story unfold here.
-            </p>
-          </div>
+          <p style={{
+            fontFamily: 'var(--font-lora)',
+            color: t.textFaint,
+            fontSize: '15px',
+            fontStyle: 'italic',
+            textAlign: 'center',
+            marginTop: '3rem',
+          }}>
+            Start writing to see your story unfold here.
+          </p>
         )}
 
       </div>

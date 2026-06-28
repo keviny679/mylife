@@ -22,13 +22,10 @@ export default function Memories() {
     async function load() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) { router.push('/login'); return }
-
       const { data } = await supabase
-        .from('entries')
-        .select('*')
+        .from('entries').select('*')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false })
-
       if (data && data.length > 0) {
         setEntries(data)
         const currentMonth = new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
@@ -39,7 +36,6 @@ export default function Memories() {
           setRandomMemory(older[Math.floor(Math.random() * older.length)])
         }
       }
-
       setLoading(false)
     }
     load()
@@ -75,7 +71,7 @@ export default function Memories() {
   if (loading) {
     return (
       <main className="min-h-screen flex items-center justify-center" style={{ background: t.bg }}>
-        <p style={{ color: t.textFaint, fontFamily: 'var(--font-lora)' }}>Loading...</p>
+        <p style={{ color: t.textFaint, fontFamily: 'var(--font-lora)', fontStyle: 'italic' }}>Loading...</p>
       </main>
     )
   }
@@ -84,45 +80,73 @@ export default function Memories() {
     <main className="min-h-screen relative overflow-hidden" style={{ background: t.bg }}>
       <div className="absolute bottom-0 left-0 w-96 h-96 rounded-full pointer-events-none" style={{ background: `radial-gradient(circle, ${t.glow1} 0%, transparent 70%)` }} />
       <div className="absolute top-0 right-0 w-72 h-72 rounded-full pointer-events-none" style={{ background: `radial-gradient(circle, ${t.glow2} 0%, transparent 70%)` }} />
-<div className="absolute pointer-events-none transition-colors duration-500" style={{ top: 0, left: '50%', width: '600px', height: '600px', transform: 'translate(-50%, -60%)', borderRadius: '50%', background: `radial-gradient(circle, ${t.glow3} 0%, transparent 70%)` }} />
+      <div className="absolute pointer-events-none" style={{ top: 0, left: '50%', width: '600px', height: '600px', transform: 'translate(-50%, -60%)', borderRadius: '50%', background: `radial-gradient(circle, ${t.glow3} 0%, transparent 70%)` }} />
+
       <div className="relative z-10 max-w-2xl mx-auto px-6 py-10">
 
-        <div style={{ textAlign: 'center', marginBottom: '2.5rem' }}>
-          <h1 style={{ fontFamily: 'var(--font-lora)', color: t.accent, fontSize: '28px', marginBottom: '8px' }}>
+        {/* Header */}
+        <div style={{ marginBottom: '2.5rem' }}>
+          <h1 style={{
+            fontFamily: 'var(--font-lora)',
+            color: t.inputText,
+            fontSize: '32px',
+            fontWeight: '600',
+            letterSpacing: '-0.01em',
+            marginBottom: '6px',
+          }}>
             Memories
           </h1>
-          <p style={{ color: t.textFaint, fontSize: '13px', fontFamily: 'var(--font-lora)', fontStyle: 'italic' }}>
-            Everything you've written, waiting to be rediscovered.
+          <p style={{
+            color: t.textFaint,
+            fontSize: '13px',
+            fontFamily: 'var(--font-lora)',
+            fontStyle: 'italic',
+          }}>
+            everything you've written, waiting to be found again.
           </p>
         </div>
 
-        {/* Stats strip */}
+        {/* Stats strip — minimal, no rounded card feel */}
         <div style={{
           display: 'flex',
+          gap: '0',
           marginBottom: '2rem',
-          background: t.cardBorder,
-          borderRadius: '12px',
-          overflow: 'hidden',
-          border: `1px solid ${t.cardBorder}`,
-          gap: '1px'
+          borderTop: `1px solid ${t.cardBorder}`,
+          borderBottom: `1px solid ${t.cardBorder}`,
         }}>
           {[
-            { label: 'Entries', value: String(entries.length) },
-            { label: 'Moods logged', value: String(Object.values(moodCounts).reduce((a: number, b: number) => a + b, 0)) },
-            { label: 'Favorite mood', value: favoriteMood ? favoriteMood.split(' ').slice(1).join(' ') : '—' },
-          ].map((stat) => (
-            <div key={stat.label} style={{ flex: 1, padding: '16px', background: t.cardBg, textAlign: 'center' }}>
-              <p style={{ fontFamily: 'var(--font-lora)', color: t.accent, fontSize: '20px', fontWeight: '500', marginBottom: '4px' }}>
+            { label: 'entries', value: String(entries.length) },
+            { label: 'moods logged', value: String(Object.values(moodCounts).reduce((a: number, b: number) => a + b, 0)) },
+            { label: 'favorite mood', value: favoriteMood ? favoriteMood.split(' ').slice(1).join(' ') : '—' },
+          ].map((stat, i) => (
+            <div key={stat.label} style={{
+              flex: 1,
+              padding: '14px 0',
+              textAlign: 'center',
+              borderLeft: i > 0 ? `1px solid ${t.cardBorder}` : 'none',
+            }}>
+              <p style={{
+                fontFamily: 'var(--font-lora)',
+                color: t.inputText,
+                fontSize: '18px',
+                fontWeight: '500',
+                marginBottom: '3px',
+              }}>
                 {stat.value}
               </p>
-              <p style={{ color: t.textDim, fontSize: '11px', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+              <p style={{
+                color: t.textDim,
+                fontSize: '10px',
+                letterSpacing: '0.10em',
+                textTransform: 'uppercase',
+              }}>
                 {stat.label}
               </p>
             </div>
           ))}
         </div>
 
-        {/* Random memory */}
+        {/* Random memory — folded paper card */}
         {randomMemory && (
           <button
             onClick={() => setSelectedEntry(randomMemory)}
@@ -130,114 +154,179 @@ export default function Memories() {
               width: '100%',
               textAlign: 'left',
               marginBottom: '2rem',
-              padding: '20px 24px',
+              padding: '18px 20px',
               background: t.cardBg,
-              border: `1px solid ${t.accent}`,
-              borderRadius: '12px',
+              border: `1px solid ${t.cardBorder}`,
+              borderLeft: `2px solid ${t.accent}`,
+              borderRadius: '4px',
               cursor: 'pointer',
-              transition: 'opacity 0.2s ease'
+              boxShadow: `0 2px 10px ${t.shadow}`,
+              transition: 'opacity 0.15s ease',
             }}
             onMouseEnter={(e) => e.currentTarget.style.opacity = '0.85'}
             onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}
           >
-            <p style={{ fontSize: '11px', color: t.accent, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: '8px' }}>
-              ✦ a memory
+            <p style={{
+              fontSize: '10px',
+              color: t.accent,
+              letterSpacing: '0.12em',
+              textTransform: 'uppercase',
+              marginBottom: '10px',
+              fontFamily: 'var(--font-lora)',
+            }}>
+              ✦ a memory, resurfaced
             </p>
-            <p style={{ fontSize: '12px', color: t.textDim, marginBottom: '8px' }}>
-              {new Date(randomMemory.created_at).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
-              {randomMemory.mood && ` · ${randomMemory.mood}`}
+            <p style={{
+              fontSize: '11px',
+              color: t.textFaint,
+              fontStyle: 'italic',
+              fontFamily: 'var(--font-lora)',
+              marginBottom: '10px',
+            }}>
+              {new Date(randomMemory.created_at).toLocaleDateString('en-US', {
+                weekday: 'long', month: 'long', day: 'numeric', year: 'numeric'
+              })}
+              {randomMemory.mood && ` · ${randomMemory.mood.split(' ').slice(1).join(' ')}`}
             </p>
             {randomMemory.title && (
-              <p style={{ fontFamily: 'var(--font-lora)', color: t.accent, fontSize: '17px', marginBottom: '8px', fontWeight: '500' }}>
+              <p style={{
+                fontFamily: 'var(--font-lora)',
+                color: t.inputText,
+                fontSize: '17px',
+                fontWeight: '500',
+                marginBottom: '8px',
+              }}>
                 {randomMemory.title}
               </p>
             )}
             <p style={{
-              fontFamily: 'var(--font-lora)', color: t.bodyText, fontSize: '15px', lineHeight: '1.8',
-              overflow: 'hidden', display: '-webkit-box',
-              WebkitLineClamp: 3, WebkitBoxOrient: 'vertical' as const
+              fontFamily: 'var(--font-lora)',
+              color: t.bodyText,
+              fontSize: '14px',
+              lineHeight: '1.8',
+              overflow: 'hidden',
+              display: '-webkit-box',
+              WebkitLineClamp: 3,
+              WebkitBoxOrient: 'vertical' as const,
             }}>
               {randomMemory.body}
             </p>
           </button>
         )}
 
-        {/* Mood filter */}
-        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '1.5rem' }}>
+        {/* Mood filter — dots like the journal page */}
+        <div style={{ display: 'flex', gap: '16px', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap' }}>
           <button
             onClick={() => setActiveMood(null)}
             style={{
-              fontSize: '12px', padding: '4px 14px', borderRadius: '20px',
-              background: activeMood === null ? t.cardBorder : 'transparent',
-              color: activeMood === null ? t.accent : t.textMuted,
-              border: activeMood === null ? `1px solid ${t.accent}` : `1px solid ${t.entryBorder}`,
-              cursor: 'pointer', transition: 'all 0.2s ease'
+              display: 'flex', alignItems: 'center', gap: '5px',
+              background: 'none', border: 'none', cursor: 'pointer', padding: 0,
             }}
           >
-            all
+            <div style={{
+              width: '6px', height: '6px', borderRadius: '50%',
+              background: activeMood === null ? t.accent : t.textDim,
+              transition: 'background 0.15s ease',
+            }} />
+            <span style={{
+              fontSize: '12px',
+              fontFamily: 'var(--font-lora)',
+              color: activeMood === null ? t.accent : t.textFaint,
+              transition: 'color 0.15s ease',
+            }}>all</span>
           </button>
           {moods.map((m) => (
             <button
               key={m}
               onClick={() => setActiveMood(activeMood === m ? null : m)}
               style={{
-                fontSize: '12px', padding: '4px 14px', borderRadius: '20px',
-                background: activeMood === m ? t.cardBorder : 'transparent',
-                color: activeMood === m ? t.accent : t.textMuted,
-                border: activeMood === m ? `1px solid ${t.accent}` : `1px solid ${t.entryBorder}`,
-                cursor: 'pointer', transition: 'all 0.2s ease'
+                display: 'flex', alignItems: 'center', gap: '5px',
+                background: 'none', border: 'none', cursor: 'pointer', padding: 0,
               }}
             >
-              {m}
+              <div style={{
+                width: '6px', height: '6px', borderRadius: '50%',
+                background: activeMood === m ? t.accent : t.textDim,
+                transition: 'background 0.15s ease',
+              }} />
+              <span style={{
+                fontSize: '12px',
+                fontFamily: 'var(--font-lora)',
+                color: activeMood === m ? t.accent : t.textFaint,
+                transition: 'color 0.15s ease',
+              }}>
+                {m.split(' ').slice(1).join(' ')}
+              </span>
             </button>
           ))}
         </div>
 
-        <p style={{ fontSize: '12px', color: t.textDim, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: '1.5rem' }}>
+        {/* Entry count */}
+        <p style={{
+          fontSize: '10px',
+          color: t.textDim,
+          letterSpacing: '0.10em',
+          textTransform: 'uppercase',
+          marginBottom: '1.25rem',
+        }}>
           {filtered.length} {filtered.length === 1 ? 'entry' : 'entries'}
-          {activeMood && ` · ${activeMood}`}
+          {activeMood && ` · ${activeMood.split(' ').slice(1).join(' ')}`}
         </p>
 
         {/* Grouped months */}
         {filtered.length === 0 ? (
-          <p style={{ color: t.textFaint, textAlign: 'center', marginTop: '4rem', fontFamily: 'var(--font-lora)', fontStyle: 'italic' }}>
+          <p style={{
+            color: t.textFaint, textAlign: 'center', marginTop: '4rem',
+            fontFamily: 'var(--font-lora)', fontStyle: 'italic',
+          }}>
             No entries with this mood yet.
           </p>
         ) : (
-          <div className="flex flex-col" style={{ gap: '1rem' }}>
-            {Object.entries(grouped).map(([month, monthEntries]) => {
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0' }}>
+            {Object.entries(grouped).map(([month, monthEntries], groupIndex) => {
               const isOpen = openMonths.has(month)
               const typedEntries = monthEntries as any[]
               return (
-                <div key={month} style={{ border: `1px solid ${t.cardBorder}`, borderRadius: '12px', overflow: 'hidden' }}>
+                <div key={month} style={{
+                  borderTop: groupIndex === 0 ? `1px solid ${t.cardBorder}` : 'none',
+                  borderBottom: `1px solid ${t.cardBorder}`,
+                  borderLeft: `1px solid ${t.cardBorder}`,
+                  borderRight: `1px solid ${t.cardBorder}`,
+                  borderRadius: groupIndex === 0 ? '4px 4px 0 0' : Object.entries(grouped).length - 1 === groupIndex ? '0 0 4px 4px' : '0',
+                  overflow: 'hidden',
+                }}>
+                  {/* Chapter header */}
                   <button
                     onClick={() => toggleMonth(month)}
                     style={{
-                      width: '100%',
-                      padding: '14px 20px',
-                      background: t.cardBg,
-                      border: 'none',
-                      cursor: 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
+                      width: '100%', padding: '12px 16px',
+                      background: t.cardBg, border: 'none',
+                      cursor: 'pointer', display: 'flex',
+                      alignItems: 'center', justifyContent: 'space-between',
                     }}
                   >
-                    <p style={{ fontSize: '12px', color: t.accent, letterSpacing: '0.12em', textTransform: 'uppercase', fontFamily: 'var(--font-lora)' }}>
+                    <p style={{
+                      fontSize: '11px',
+                      color: t.textMuted,
+                      letterSpacing: '0.12em',
+                      textTransform: 'uppercase',
+                      fontFamily: 'var(--font-lora)',
+                    }}>
                       {month}
                     </p>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                      <p style={{ fontSize: '11px', color: t.textDim }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                      <p style={{ fontSize: '10px', color: t.textDim, letterSpacing: '0.06em' }}>
                         {typedEntries.length} {typedEntries.length === 1 ? 'entry' : 'entries'}
                       </p>
                       <p style={{
-                        fontSize: '12px', color: t.textDim,
+                        fontSize: '11px', color: t.textDim,
                         transition: 'transform 0.2s ease',
-                        transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)'
+                        transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)',
                       }}>↓</p>
                     </div>
                   </button>
 
+                  {/* Entries */}
                   {isOpen && (
                     <div style={{ borderTop: `1px solid ${t.cardBorder}` }}>
                       {typedEntries.map((entry: any, index: number) => (
@@ -245,15 +334,12 @@ export default function Memories() {
                           key={entry.id}
                           onClick={() => setSelectedEntry(entry)}
                           style={{
-                            width: '100%',
-                            textAlign: 'left',
-                            display: 'block',
-                            padding: '14px 20px',
+                            width: '100%', textAlign: 'left',
+                            display: 'block', padding: '12px 16px',
                             border: 'none',
                             borderBottom: index < typedEntries.length - 1 ? `1px solid ${t.entryBorder}` : 'none',
                             background: t.entryBg,
-                            cursor: 'pointer',
-                            transition: 'all 0.15s ease'
+                            cursor: 'pointer', transition: 'background 0.15s ease',
                           }}
                           onMouseEnter={(e) => e.currentTarget.style.background = t.cardBg}
                           onMouseLeave={(e) => e.currentTarget.style.background = t.entryBg}
@@ -262,32 +348,55 @@ export default function Memories() {
                             <div style={{ flex: 1, minWidth: 0 }}>
                               {entry.title ? (
                                 <>
-                                  <p style={{ fontFamily: 'var(--font-lora)', color: t.accent, fontSize: '15px', fontWeight: '500', marginBottom: '3px' }}>
+                                  <p style={{
+                                    fontFamily: 'var(--font-lora)',
+                                    color: t.inputText,
+                                    fontSize: '14px',
+                                    fontWeight: '500',
+                                    marginBottom: '2px',
+                                    overflow: 'hidden',
+                                    textOverflow: 'ellipsis',
+                                    whiteSpace: 'nowrap',
+                                  }}>
                                     {entry.title}
                                   </p>
                                   <p style={{
-                                    fontFamily: 'var(--font-lora)', color: t.entryBodyText, fontSize: '13px', lineHeight: '1.5',
-                                    overflow: 'hidden', display: '-webkit-box',
-                                    WebkitLineClamp: 1, WebkitBoxOrient: 'vertical' as const
+                                    fontFamily: 'var(--font-lora)',
+                                    color: t.entryBodyText,
+                                    fontSize: '12px',
+                                    lineHeight: '1.5',
+                                    overflow: 'hidden',
+                                    display: '-webkit-box',
+                                    WebkitLineClamp: 1,
+                                    WebkitBoxOrient: 'vertical' as const,
                                   }}>
                                     {entry.body}
                                   </p>
                                 </>
                               ) : (
                                 <p style={{
-                                  fontFamily: 'var(--font-lora)', color: t.bodyText, fontSize: '14px', lineHeight: '1.6',
-                                  overflow: 'hidden', display: '-webkit-box',
-                                  WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' as const
+                                  fontFamily: 'var(--font-lora)',
+                                  color: t.bodyText,
+                                  fontSize: '13px',
+                                  lineHeight: '1.6',
+                                  overflow: 'hidden',
+                                  display: '-webkit-box',
+                                  WebkitLineClamp: 2,
+                                  WebkitBoxOrient: 'vertical' as const,
                                 }}>
                                   {entry.body}
                                 </p>
                               )}
                             </div>
                             <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                              <p style={{ fontSize: '11px', color: t.textDim, letterSpacing: '0.05em', marginBottom: '3px' }}>
+                              <p style={{ fontSize: '11px', color: t.textDim, marginBottom: '2px' }}>
                                 {new Date(entry.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                               </p>
-                              {entry.mood && <p style={{ fontSize: '13px' }}>{entry.mood.split(' ')[0]}</p>}
+                              {entry.mood && (
+                                <p style={{ fontSize: '11px', color: t.textFaint, fontFamily: 'var(--font-lora)' }}>
+                                  {entry.mood.split(' ').slice(1).join(' ')}
+                                </p>
+                              )}
                             </div>
                           </div>
                         </button>
@@ -301,53 +410,36 @@ export default function Memories() {
         )}
       </div>
 
-      {/* Full page entry view — slides in like turning a journal page */}
+      {/* Full page entry read — page turn */}
       {selectedEntry && (
-        <div
-          style={{
-            position: 'fixed',
-            inset: 0,
-            zIndex: 80,
-            background: t.bg,
-            overflowY: 'auto',
-            animation: 'pageIn 0.35s cubic-bezier(0.16, 1, 0.3, 1)',
-          }}
-        >
-          {/* Intensified atmosphere — room feels more intimate */}
+        <div style={{
+          position: 'fixed', inset: 0, zIndex: 80,
+          background: t.bg, overflowY: 'auto',
+          animation: 'pageIn 0.35s cubic-bezier(0.16, 1, 0.3, 1)',
+        }}>
           <div style={{
-            position: 'fixed',
-            bottom: '-100px', left: '-100px',
-            width: '600px', height: '600px',
-            borderRadius: '50%',
+            position: 'fixed', bottom: '-100px', left: '-100px',
+            width: '600px', height: '600px', borderRadius: '50%',
             background: `radial-gradient(circle, ${t.glow1} 0%, transparent 70%)`,
-            pointerEvents: 'none',
-            animation: 'glowPulse 1s ease forwards',
-            opacity: 0,
+            pointerEvents: 'none', animation: 'glowPulse 1s ease forwards', opacity: 0,
           }} />
           <div style={{
-            position: 'fixed',
-            top: '-80px', right: '-80px',
-            width: '500px', height: '500px',
-            borderRadius: '50%',
+            position: 'fixed', top: '-80px', right: '-80px',
+            width: '500px', height: '500px', borderRadius: '50%',
             background: `radial-gradient(circle, ${t.glow2} 0%, transparent 70%)`,
-            pointerEvents: 'none',
-            animation: 'glowPulse 1.3s ease forwards',
-            opacity: 0,
+            pointerEvents: 'none', animation: 'glowPulse 1.3s ease forwards', opacity: 0,
           }} />
 
           <div style={{ maxWidth: '560px', margin: '0 auto', padding: '4rem 2rem 8rem' }}>
-
-            {/* Back to memories */}
             <button
               onClick={() => setSelectedEntry(null)}
               style={{
                 background: 'none', border: 'none', cursor: 'pointer',
-                color: t.textDim, fontSize: '12px',
+                color: t.textDim, fontSize: '11px',
                 letterSpacing: '0.08em', textTransform: 'uppercase',
-                marginBottom: '4rem',
-                display: 'flex', alignItems: 'center', gap: '6px',
-                padding: 0, fontFamily: 'var(--font-lora)',
-                transition: 'color 0.2s ease',
+                marginBottom: '4rem', display: 'flex', alignItems: 'center',
+                gap: '6px', padding: 0, fontFamily: 'var(--font-lora)',
+                transition: 'color 0.15s ease',
               }}
               onMouseEnter={(e) => e.currentTarget.style.color = t.accent}
               onMouseLeave={(e) => e.currentTarget.style.color = t.textDim}
@@ -355,50 +447,46 @@ export default function Memories() {
               ← memories
             </button>
 
-            {/* Date stamp */}
             <p style={{
-              fontSize: '11px', color: t.textDim,
-              letterSpacing: '0.14em', textTransform: 'uppercase',
-              marginBottom: '1rem',
+              fontSize: '11px', color: t.textFaint,
+              fontStyle: 'italic', fontFamily: 'var(--font-lora)',
+              marginBottom: '1.5rem',
               animation: 'fadeUp 0.5s ease 0.1s both',
             }}>
               {new Date(selectedEntry.created_at).toLocaleDateString('en-US', {
                 weekday: 'long', month: 'long', day: 'numeric', year: 'numeric'
               })}
-              {selectedEntry.mood && ` · ${selectedEntry.mood}`}
+              {selectedEntry.mood && ` · ${selectedEntry.mood.split(' ').slice(1).join(' ')}`}
             </p>
 
-            {/* Title */}
             {selectedEntry.title && (
               <h2 style={{
-                fontFamily: 'var(--font-lora)', color: t.accent,
-                fontSize: '32px', fontWeight: '500',
-                marginBottom: '2rem', lineHeight: '1.3',
+                fontFamily: 'var(--font-lora)', color: t.inputText,
+                fontSize: '30px', fontWeight: '600',
+                marginBottom: '2rem', lineHeight: '1.25',
+                letterSpacing: '-0.01em',
                 animation: 'fadeUp 0.5s ease 0.15s both',
               }}>
                 {selectedEntry.title}
               </h2>
             )}
 
-            {/* Pen stroke */}
             <div style={{
-              width: '48px', height: '1px',
-              background: t.cardBorder, marginBottom: '2.5rem',
+              width: '32px', height: '1px',
+              background: t.cardBorder, marginBottom: '2rem',
               animation: 'fadeUp 0.5s ease 0.2s both',
             }} />
 
-            {/* Body */}
             <p style={{
-              fontFamily: 'var(--font-lora)', color: t.inputText,
-              fontSize: '19px', lineHeight: '2.2', whiteSpace: 'pre-wrap',
+              fontFamily: 'var(--font-lora)', color: t.bodyText,
+              fontSize: '18px', lineHeight: '2.1', whiteSpace: 'pre-wrap',
               animation: 'fadeUp 0.6s ease 0.25s both',
             }}>
               {selectedEntry.body}
             </p>
 
-            {/* Open in journal */}
             <div style={{
-              marginTop: '4rem', paddingTop: '2rem',
+              marginTop: '4rem', paddingTop: '1.5rem',
               borderTop: `1px solid ${t.entryBorder}`,
               animation: 'fadeUp 0.5s ease 0.35s both',
             }}>
@@ -407,7 +495,8 @@ export default function Memories() {
                 style={{
                   fontSize: '11px', color: t.textDim,
                   textDecoration: 'none', letterSpacing: '0.08em',
-                  textTransform: 'uppercase', transition: 'color 0.2s ease',
+                  textTransform: 'uppercase', transition: 'color 0.15s ease',
+                  fontFamily: 'var(--font-lora)',
                 }}
                 onMouseEnter={(e) => e.currentTarget.style.color = t.accent}
                 onMouseLeave={(e) => e.currentTarget.style.color = t.textDim}

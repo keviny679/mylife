@@ -6,7 +6,12 @@ import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
 import { useTheme } from '@/lib/theme-context'
 
-const moods = ['😊 good', '😐 neutral', '😔 sad', '❓unsure']
+const moodOptions = [
+  { value: '😊 good', label: 'good', emoji: '😊' },
+  { value: '😐 neutral', label: 'neutral', emoji: '😐' },
+  { value: '😔 sad', label: 'sad', emoji: '😔' },
+  { value: '❓unsure', label: 'unsure', emoji: '❓' },
+]
 
 function calculateStreak(entries: any[]): number {
   if (entries.length === 0) return 0
@@ -62,7 +67,7 @@ export default function Journal() {
   const [mood, setMood] = useState('')
   const [saving, setSaving] = useState(false)
   const router = useRouter()
-  const { t } = useTheme()
+  const { t, mode } = useTheme()
 
   useEffect(() => {
     async function getUser() {
@@ -79,61 +84,47 @@ export default function Journal() {
     getUser()
   }, [])
 
-async function handleSaveEntry() {
-  if (!body.trim()) return
-
-  // Surface-level protection 1 — body length cap
-  // Prevents massive entries from filling the database
-  if (body.length > 50000) {
-    alert('Entry is too long. Please keep it under 50,000 characters.')
-    return
-  }
-
-  setSaving(true)
-
-  // Surface-level protection 2 — rate limiting
-  // Check how many entries this user has created in the last hour
-  const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString()
-  const { count } = await supabase
-    .from('entries')
-    .select('*', { count: 'exact', head: true })
-    .eq('user_id', user.id)
-    .gte('created_at', oneHourAgo)
-
-  if (count && count >= 10) {
-    alert('You\'ve written a lot in the last hour. Take a breath and come back soon.')
-    setSaving(false)
-    return
-  }
-
-  const { error } = await supabase.from('entries').insert({
-    user_id: user.id,
-    title: title.trim() || null,
-    body: body.trim(),
-    mood: mood || null,
-  })
-
-  if (!error) {
-    setTitle('')
-    setBody('')
-    setMood('')
-
-    const { data } = await supabase
+  async function handleSaveEntry() {
+    if (!body.trim()) return
+    if (body.length > 50000) {
+      alert('Entry is too long. Please keep it under 50,000 characters.')
+      return
+    }
+    setSaving(true)
+    const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString()
+    const { count } = await supabase
       .from('entries')
-      .select('*')
+      .select('*', { count: 'exact', head: true })
       .eq('user_id', user.id)
-      .order('created_at', { ascending: false })
-
-    setEntries(data || [])
+      .gte('created_at', oneHourAgo)
+    if (count && count >= 10) {
+      alert('You\'ve written a lot in the last hour. Take a breath and come back soon.')
+      setSaving(false)
+      return
+    }
+    const { error } = await supabase.from('entries').insert({
+      user_id: user.id,
+      title: title.trim() || null,
+      body: body.trim(),
+      mood: mood || null,
+    })
+    if (!error) {
+      setTitle('')
+      setBody('')
+      setMood('')
+      const { data } = await supabase
+        .from('entries').select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+      setEntries(data || [])
+    }
+    setSaving(false)
   }
-
-  setSaving(false)
-}
 
   if (loading) {
     return (
       <main className="min-h-screen flex items-center justify-center" style={{ background: t.bg }}>
-        <p style={{ color: t.textFaint, fontFamily: 'var(--font-lora)' }}>Loading...</p>
+        <p style={{ color: t.textFaint, fontFamily: 'var(--font-lora)', fontStyle: 'italic' }}>Loading...</p>
       </main>
     )
   }
@@ -159,67 +150,74 @@ async function handleSaveEntry() {
     }
   })
 
+  // Sky mode uses dark text — button text needs to be readable
+  const isSky = mode === 'sky'
+
   return (
     <main className="min-h-screen relative overflow-hidden transition-colors duration-500" style={{ background: t.bg }}>
-      <div className="absolute bottom-0 left-0 w-96 h-96 rounded-full pointer-events-none transition-colors duration-500" style={{ background: `radial-gradient(circle, ${t.glow1} 0%, transparent 70%)` }} />
-      <div className="absolute top-0 right-0 w-72 h-72 rounded-full pointer-events-none transition-colors duration-500" style={{ background: `radial-gradient(circle, ${t.glow2} 0%, transparent 70%)` }} />
-      <div className="absolute pointer-events-none transition-colors duration-500" style={{ top: 0, left: '50%', width: '600px', height: '600px', transform: 'translate(-50%, -60%)', borderRadius: '50%', background: `radial-gradient(circle, ${t.glow3} 0%, transparent 70%)` }} />
+      <div className="absolute bottom-0 left-0 w-96 h-96 rounded-full pointer-events-none" style={{ background: `radial-gradient(circle, ${t.glow1} 0%, transparent 70%)` }} />
+      <div className="absolute top-0 right-0 w-72 h-72 rounded-full pointer-events-none" style={{ background: `radial-gradient(circle, ${t.glow2} 0%, transparent 70%)` }} />
+      <div className="absolute pointer-events-none" style={{ top: 0, left: '50%', width: '600px', height: '600px', transform: 'translate(-50%, -60%)', borderRadius: '50%', background: `radial-gradient(circle, ${t.glow3} 0%, transparent 70%)` }} />
 
       <div className="relative z-10 max-w-2xl mx-auto px-6 py-10">
 
-        <div className="flex justify-center items-center mb-8">
-          <h1 style={{ fontFamily: 'var(--font-lora)', color: t.accent, fontSize: '24px' }}>MyLife</h1>
+        {/* Header */}
+        <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
+          <h1 style={{
+            fontFamily: 'var(--font-lora)',
+            color: t.inputText,
+            fontSize: '26px',
+            fontWeight: '600',
+            letterSpacing: '-0.01em',
+            marginBottom: '0'
+          }}>
+            MyLife
+          </h1>
         </div>
 
-        {/*
-          STREAK SECTION
-          Date, current streak + personal best, Mon-Sun week dots, milestone message.
-          calculateStreak() — consecutive days ending today or yesterday.
-          calculateLongestStreak() — all-time personal best.
-          getMilestoneMessage() — quiet celebration at key milestones (7, 14, 30, 60, 100, 365).
-          To improve: animate dots on save, expand to month view on click.
-        */}
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '2rem', gap: '10px' }}>
-          <p style={{ color: t.textMuted, fontSize: '13px', textAlign: 'center', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+        {/* Streak section */}
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '2.5rem', gap: '8px' }}>
+          <p style={{
+            color: t.textFaint,
+            fontSize: '12px',
+            letterSpacing: '0.06em',
+            fontStyle: 'italic',
+            fontFamily: 'var(--font-lora)',
+          }}>
             {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
           </p>
 
           {entries.length > 0 && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
               {streak > 0 ? (
-                <p style={{ color: t.accent, fontSize: '13px', letterSpacing: '0.05em' }}>
-                  🔥 {streak} day{streak === 1 ? '' : 's'} in a row
+                <p style={{ color: t.textMuted, fontSize: '12px', letterSpacing: '0.04em', fontFamily: 'var(--font-lora)' }}>
+                  {streak} day{streak === 1 ? '' : 's'} · best: {longestStreak}d
                 </p>
               ) : (
-                <p style={{ color: t.textDim, fontSize: '13px', fontStyle: 'italic', fontFamily: 'var(--font-lora)' }}>
+                <p style={{ color: t.textDim, fontSize: '12px', fontStyle: 'italic', fontFamily: 'var(--font-lora)' }}>
                   write tonight to start a streak
                 </p>
-              )}
-              {longestStreak > 0 && (
-                <>
-                  <span style={{ color: t.textDim, fontSize: '11px' }}>·</span>
-                  <p style={{ color: t.textDim, fontSize: '12px' }}>best: {longestStreak}d</p>
-                </>
               )}
             </div>
           )}
 
+          {/* Weekly dots */}
           {entries.length > 0 && (
-            <div style={{ display: 'flex', gap: '12px', alignItems: 'center', marginTop: '2px' }}>
+            <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
               {currentWeek.map((day, i) => (
-                <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px' }}>
+                <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '5px' }}>
                   <div style={{
-                    width: '10px', height: '10px', borderRadius: '50%',
+                    width: '7px', height: '7px', borderRadius: '50%',
                     background: day.wrote ? t.accent : t.entryBorder,
-                    boxShadow: day.wrote ? `0 0 8px ${t.accent}60` : 'none',
-                    outline: day.isToday ? `2px solid ${t.accent}` : 'none',
+                    outline: day.isToday ? `1.5px solid ${t.accent}` : 'none',
                     outlineOffset: '2px',
-                    transition: 'all 0.2s ease'
+                    transition: 'all 0.2s ease',
+                    opacity: day.wrote ? 1 : 0.5,
                   }} />
                   <p style={{
-                    fontSize: '11px',
+                    fontSize: '9px',
                     color: day.isToday ? t.accent : t.textDim,
-                    fontWeight: day.isToday ? '600' : '400'
+                    letterSpacing: '0.03em',
                   }}>
                     {day.dayLabel}
                   </p>
@@ -230,88 +228,246 @@ async function handleSaveEntry() {
 
           {milestone && (
             <p style={{
-              color: t.accent, fontSize: '12px',
+              color: t.accent, fontSize: '11px',
               fontFamily: 'var(--font-lora)', fontStyle: 'italic',
-              textAlign: 'center', animation: 'fadeIn 1s ease'
+              textAlign: 'center', animation: 'fadeIn 1s ease',
+              letterSpacing: '0.02em',
             }}>
               {milestone}
             </p>
           )}
         </div>
 
-        <div className="rounded-xl p-6 mb-6 transition-colors duration-500" style={{ background: t.cardBg, border: `1px solid ${t.cardBorder}` }}>
+        {/*
+          WRITE AREA
+          Folded paper feel — low border radius, hairline border, warm shadow.
+          Placeholder text comes from t.prompt — unique per theme.
+          Mood pills are small dots with labels, not rounded pills.
+          Button says "save this day" — from the PDF design.
+        */}
+        <div style={{
+          background: t.cardBg,
+          border: `1px solid ${t.cardBorder}`,
+          borderRadius: '6px',
+          padding: '1.5rem',
+          marginBottom: '2rem',
+          boxShadow: `0 2px 12px ${t.shadow}`,
+        }}>
+          {/* Title input */}
           <input
             type="text"
             placeholder="Title (optional)"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            style={{ width: '100%', background: 'transparent', border: 'none', borderBottom: `1px solid ${t.cardBorder}`, color: t.inputText, fontFamily: 'var(--font-lora)', fontSize: '20px', paddingBottom: '12px', marginBottom: '16px', outline: 'none', boxSizing: 'border-box' }}
+            style={{
+              width: '100%',
+              background: 'transparent',
+              border: 'none',
+              borderBottom: `1px solid ${t.cardBorder}`,
+              color: t.inputText,
+              fontFamily: 'var(--font-lora)',
+              fontSize: '18px',
+              fontStyle: 'italic',
+              paddingBottom: '10px',
+              marginBottom: '14px',
+              outline: 'none',
+              boxSizing: 'border-box',
+            }}
           />
+
+          {/* Body textarea — prompt from theme */}
           <textarea
-            placeholder="How did today go..."
+            placeholder={t.prompt}
             value={body}
             onChange={(e) => setBody(e.target.value)}
-            rows={6}
-            style={{ width: '100%', background: 'transparent', border: 'none', color: t.bodyText, fontFamily: 'var(--font-lora)', fontSize: '16px', lineHeight: '1.9', resize: 'none', outline: 'none', boxSizing: 'border-box' }}
+            rows={7}
+            style={{
+              width: '100%',
+              background: 'transparent',
+              border: 'none',
+              color: t.bodyText,
+              fontFamily: 'var(--font-lora)',
+              fontSize: '16px',
+              lineHeight: '2',
+              resize: 'none',
+              outline: 'none',
+              boxSizing: 'border-box',
+            }}
           />
-          <div className="flex flex-col gap-3 mt-4 pt-4" style={{ borderTop: `1px solid ${t.cardBorder}` }}>
-            <div className="flex gap-2 flex-wrap">
-              {moods.map((m) => (
-                <button
-                  key={m}
-                  onClick={() => setMood(mood === m ? '' : m)}
-                  style={{
-                    fontSize: '12px', padding: '4px 12px', borderRadius: '20px',
-                    background: mood === m ? t.cardBorder : t.bg,
-                    color: mood === m ? t.accent : t.textMuted,
-                    border: mood === m ? `1px solid ${t.accent}` : `1px solid ${t.entryBorder}`,
-                    cursor: 'pointer', transition: 'all 0.2s ease'
-                  }}
-                >
-                  {m}
-                </button>
-              ))}
+
+          {/* Mood + save */}
+          <div style={{
+            borderTop: `1px solid ${t.cardBorder}`,
+            marginTop: '1rem',
+            paddingTop: '1rem',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+          }}>
+            {/* Mood dots */}
+            <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
+              {moodOptions.map((m) => {
+                const isSelected = mood === m.value
+                return (
+                  <button
+                    key={m.value}
+                    onClick={() => setMood(mood === m.value ? '' : m.value)}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '5px',
+                      background: 'none',
+                      border: 'none',
+                      cursor: 'pointer',
+                      padding: 0,
+                      transition: 'all 0.15s ease',
+                    }}
+                  >
+                    <div style={{
+                      width: '6px',
+                      height: '6px',
+                      borderRadius: '50%',
+                      background: isSelected ? t.accent : t.textDim,
+                      transition: 'background 0.15s ease',
+                      flexShrink: 0,
+                    }} />
+                    <span style={{
+                      fontSize: '12px',
+                      fontFamily: 'var(--font-lora)',
+                      color: isSelected ? t.accent : t.textFaint,
+                      transition: 'color 0.15s ease',
+                    }}>
+                      {m.label}
+                    </span>
+                  </button>
+                )
+              })}
             </div>
+
+            {/* Save button */}
             <button
               onClick={handleSaveEntry}
               disabled={saving}
               style={{
-                fontSize: '13px', padding: '8px 20px', borderRadius: '8px',
-                background: t.accentStrong, color: t.bg, border: 'none',
-                cursor: 'pointer', fontWeight: '500', marginLeft: '12px', whiteSpace: 'nowrap',
-                opacity: saving ? 0.7 : 1, transition: 'opacity 0.2s ease'
+                fontSize: '12px',
+                padding: '8px 20px',
+                borderRadius: '4px',
+                background: t.accent,
+                color: isSky ? '#ffffff' : t.bg,
+                border: 'none',
+                cursor: 'pointer',
+                fontFamily: 'var(--font-lora)',
+                letterSpacing: '0.04em',
+                opacity: saving ? 0.7 : 1,
+                transition: 'opacity 0.2s ease',
+                whiteSpace: 'nowrap',
               }}
             >
-              {saving ? 'Saving...' : 'Save entry'}
+              {saving ? 'saving...' : 'save this day'}
             </button>
           </div>
         </div>
 
-        <p style={{ fontSize: '12px', color: t.textDim, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '1rem' }}>Previous entries</p>
+        {/* Previous entries label */}
+        <p style={{
+          fontSize: '10px',
+          color: t.textDim,
+          textTransform: 'uppercase',
+          letterSpacing: '0.12em',
+          marginBottom: '1rem',
+        }}>
+          Previous entries
+        </p>
 
         {entries.length === 0 ? (
-          <p style={{ color: t.textFaint, textAlign: 'center', marginTop: '4rem', fontFamily: 'var(--font-lora)', fontStyle: 'italic' }}>
-            No entries yet. Start writing your first one.
+          <p style={{
+            color: t.textFaint, textAlign: 'center', marginTop: '4rem',
+            fontFamily: 'var(--font-lora)', fontStyle: 'italic', fontSize: '15px'
+          }}>
+            Nothing yet. The page is waiting.
           </p>
         ) : (
-          <div className="flex flex-col gap-4">
-            {entries.map((entry) => (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1px' }}>
+            {entries.map((entry, index) => (
               <Link
                 key={entry.id}
                 href={`/journal/${entry.id}`}
-                className="rounded-xl p-6 transition-all duration-200"
-                style={{ display: 'block', background: t.entryBg, border: `1px solid ${t.entryBorder}`, cursor: 'pointer', textDecoration: 'none' }}
-                onMouseEnter={(e) => e.currentTarget.style.borderColor = t.accent}
-                onMouseLeave={(e) => e.currentTarget.style.borderColor = t.entryBorder}
+                style={{
+                  display: 'block',
+                  padding: '14px 16px',
+                  background: t.entryBg,
+                  borderTop: index === 0 ? `1px solid ${t.entryBorder}` : 'none',
+                  borderBottom: `1px solid ${t.entryBorder}`,
+                  borderLeft: `1px solid ${t.entryBorder}`,
+                  borderRight: `1px solid ${t.entryBorder}`,
+                  borderRadius: index === 0 ? '4px 4px 0 0' : index === entries.length - 1 ? '0 0 4px 4px' : '0',
+                  cursor: 'pointer',
+                  textDecoration: 'none',
+                  transition: 'background 0.15s ease',
+                }}
+                onMouseEnter={(e) => e.currentTarget.style.background = t.cardBg}
+                onMouseLeave={(e) => e.currentTarget.style.background = t.entryBg}
               >
-                <p style={{ fontSize: '12px', color: t.textDim, marginBottom: '6px' }}>
-                  {new Date(entry.created_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric' })}
-                  {entry.mood && ` · ${entry.mood}`}
-                </p>
-                {entry.title && (
-                  <p style={{ fontFamily: 'var(--font-lora)', color: t.accent, fontSize: '17px', marginBottom: '6px', fontWeight: '500' }}>{entry.title}</p>
-                )}
-                <p style={{ fontFamily: 'var(--font-lora)', color: t.entryBodyText, fontSize: '15px', lineHeight: '1.7' }}>{entry.body}</p>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px' }}>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    {entry.title ? (
+                      <>
+                        <p style={{
+                          fontFamily: 'var(--font-lora)',
+                          color: t.inputText,
+                          fontSize: '15px',
+                          fontWeight: '500',
+                          marginBottom: '3px',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          whiteSpace: 'nowrap',
+                        }}>
+                          {entry.title}
+                        </p>
+                        <p style={{
+                          fontFamily: 'var(--font-lora)',
+                          color: t.entryBodyText,
+                          fontSize: '13px',
+                          lineHeight: '1.5',
+                          overflow: 'hidden',
+                          display: '-webkit-box',
+                          WebkitLineClamp: 1,
+                          WebkitBoxOrient: 'vertical' as const,
+                        }}>
+                          {entry.body}
+                        </p>
+                      </>
+                    ) : (
+                      <p style={{
+                        fontFamily: 'var(--font-lora)',
+                        color: t.bodyText,
+                        fontSize: '14px',
+                        lineHeight: '1.6',
+                        overflow: 'hidden',
+                        display: '-webkit-box',
+                        WebkitLineClamp: 2,
+                        WebkitBoxOrient: 'vertical' as const,
+                      }}>
+                        {entry.body}
+                      </p>
+                    )}
+                  </div>
+                  <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                    <p style={{
+                      fontSize: '11px',
+                      color: t.textDim,
+                      letterSpacing: '0.03em',
+                      marginBottom: '3px',
+                    }}>
+                      {new Date(entry.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                    </p>
+                    {entry.mood && (
+                      <p style={{ fontSize: '12px', color: t.textFaint, fontFamily: 'var(--font-lora)' }}>
+                        {entry.mood.split(' ').slice(1).join(' ')}
+                      </p>
+                    )}
+                  </div>
+                </div>
               </Link>
             ))}
           </div>

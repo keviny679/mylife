@@ -104,7 +104,7 @@ export default function NavDrawer() {
             letterSpacing: '0.12em',
             textTransform: 'uppercase',
           }}>
-            a private record
+            your personal journal
           </p>
         </Link>
 
@@ -156,14 +156,15 @@ export default function NavDrawer() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
             {modeOptions.map((option) => {
               const isActive = mode === option.mode
-              const dotColors: Record<string, string> = {
-                nostalgic: '#36BBD9',
+                const dotColors: Record<string, string> = {
+                arcadia: '#36BBD9',
                 rain: '#86A6B4',
                 firelight: '#D68A4F',
                 dawn: '#D6A08C',
                 dusk: '#B083A0',
                 midnight: '#7C89B0',
-              }
+                sky: '#5B8DB8',
+                }
               return (
                 <button
                   key={option.mode}

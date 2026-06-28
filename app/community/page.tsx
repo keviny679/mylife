@@ -14,26 +14,19 @@ export default function Community() {
   useEffect(() => {
     async function load() {
       const sevenDaysAgo = new Date(Date.now() - 7 * 86400000).toISOString()
-
       const { data } = await supabase
         .from('entries')
         .select('id, title, body, mood, created_at, shared_at')
         .eq('is_public', true)
         .gte('shared_at', sevenDaysAgo)
         .order('shared_at', { ascending: false })
-
       setEntries(data || [])
-
       const { data: { user } } = await supabase.auth.getUser()
       if (user) {
         const { data: profile } = await supabase
-          .from('profiles')
-          .select('is_admin')
-          .eq('id', user.id)
-          .single()
+          .from('profiles').select('is_admin').eq('id', user.id).single()
         setIsAdmin(profile?.is_admin || false)
       }
-
       setLoading(false)
     }
     load()
@@ -52,7 +45,7 @@ export default function Community() {
   if (loading) {
     return (
       <main className="min-h-screen flex items-center justify-center" style={{ background: t.bg }}>
-        <p style={{ color: t.textFaint, fontFamily: 'var(--font-lora)' }}>Loading...</p>
+        <p style={{ color: t.textFaint, fontFamily: 'var(--font-lora)', fontStyle: 'italic' }}>Loading...</p>
       </main>
     )
   }
@@ -65,57 +58,79 @@ export default function Community() {
 
       <div className="relative z-10 max-w-2xl mx-auto px-6 py-10">
 
-        {/* Header */}
-        <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
-          <h1 style={{ fontFamily: 'var(--font-lora)', color: t.accent, fontSize: '28px', marginBottom: '8px' }}>
+        {/* Header — left aligned, same voice as Memories */}
+        <div style={{ marginBottom: '2.5rem' }}>
+          <h1 style={{
+            fontFamily: 'var(--font-lora)',
+            color: t.inputText,
+            fontSize: '32px',
+            fontWeight: '600',
+            letterSpacing: '-0.01em',
+            marginBottom: '6px',
+          }}>
             This Week
           </h1>
-          <p style={{ color: t.textFaint, fontSize: '13px', fontFamily: 'var(--font-lora)', fontStyle: 'italic' }}>
-            Entries people chose to share. Anonymous, intentional, fleeting.
+          <p style={{
+            color: t.textFaint,
+            fontSize: '13px',
+            fontFamily: 'var(--font-lora)',
+            fontStyle: 'italic',
+          }}>
+            entries people chose to share. anonymous, intentional, fleeting.
           </p>
         </div>
 
         {/* Empty state */}
         {entries.length === 0 ? (
-          <div style={{ textAlign: 'center', marginTop: '6rem' }}>
-            <p style={{ fontFamily: 'var(--font-lora)', color: t.textFaint, fontSize: '18px', fontStyle: 'italic', marginBottom: '8px' }}>
+          <div style={{ marginTop: '6rem' }}>
+            <p style={{
+              fontFamily: 'var(--font-lora)',
+              color: t.textFaint,
+              fontSize: '17px',
+              fontStyle: 'italic',
+              marginBottom: '6px',
+            }}>
               Nothing shared this week yet.
             </p>
-            <p style={{ color: t.textDim, fontSize: '13px' }}>
+            <p style={{ color: t.textDim, fontSize: '13px', fontFamily: 'var(--font-lora)' }}>
               Be the first to share an entry.
             </p>
           </div>
         ) : (
-          <div className="flex flex-col gap-5">
-            {entries.map((entry) => (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0' }}>
+            {entries.map((entry, index) => (
               <button
                 key={entry.id}
                 onClick={() => setSelectedEntry(entry)}
                 style={{
                   width: '100%',
                   textAlign: 'left',
-                  padding: '28px 32px',
-                  background: t.cardBg,
-                  border: `1px solid ${t.cardBorder}`,
-                  borderRadius: '12px',
+                  padding: '20px 20px',
+                  background: index % 2 === 0 ? t.entryBg : t.cardBg,
+                  borderTop: index === 0 ? `1px solid ${t.cardBorder}` : 'none',
+                  borderBottom: `1px solid ${t.cardBorder}`,
+                  borderLeft: `1px solid ${t.cardBorder}`,
+                  borderRight: `1px solid ${t.cardBorder}`,
+                  borderRadius: index === 0 ? '4px 4px 0 0' : index === entries.length - 1 ? '0 0 4px 4px' : '0',
                   cursor: 'pointer',
                   position: 'relative',
-                  transition: 'all 0.2s ease'
+                  transition: 'background 0.15s ease',
                 }}
-                onMouseEnter={(e) => e.currentTarget.style.borderColor = t.accent}
-                onMouseLeave={(e) => e.currentTarget.style.borderColor = t.cardBorder}
+                onMouseEnter={(e) => e.currentTarget.style.background = t.cardBg}
+                onMouseLeave={(e) => e.currentTarget.style.background = index % 2 === 0 ? t.entryBg : t.cardBg}
               >
                 {/* Admin remove */}
                 {isAdmin && (
                   <span
                     onClick={(e) => { e.stopPropagation(); handleRemove(entry.id) }}
                     style={{
-                      position: 'absolute', top: '16px', right: '16px',
-                      fontSize: '11px', color: t.textDim,
-                      letterSpacing: '0.06em', textTransform: 'uppercase',
-                      cursor: 'pointer', transition: 'color 0.2s ease'
+                      position: 'absolute', top: '14px', right: '16px',
+                      fontSize: '10px', color: t.textDim,
+                      letterSpacing: '0.08em', textTransform: 'uppercase',
+                      cursor: 'pointer', transition: 'color 0.15s ease',
+                      fontFamily: 'var(--font-lora)',
                     }}
-                    onMouseEnter={(e) => e.currentTarget.style.color = '#e05555'}
+                    onMouseEnter={(e) => e.currentTarget.style.color = '#c05050'}
                     onMouseLeave={(e) => e.currentTarget.style.color = t.textDim}
                   >
                     remove
@@ -123,34 +138,65 @@ export default function Community() {
                 )}
 
                 {/* Date and mood */}
-                <p style={{ fontSize: '11px', color: t.textDim, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: '12px' }}>
-                  {new Date(entry.created_at).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
-                  {entry.mood && ` · ${entry.mood.split(' ')[0]}`}
+                <p style={{
+                  fontSize: '11px',
+                  color: t.textFaint,
+                  fontStyle: 'italic',
+                  fontFamily: 'var(--font-lora)',
+                  marginBottom: '10px',
+                }}>
+                  {new Date(entry.created_at).toLocaleDateString('en-US', {
+                    weekday: 'long', month: 'long', day: 'numeric'
+                  })}
+                  {entry.mood && ` · ${entry.mood.split(' ').slice(1).join(' ')}`}
                 </p>
 
                 {/* Title */}
                 {entry.title && (
-                  <p style={{ fontFamily: 'var(--font-lora)', color: t.accent, fontSize: '20px', fontWeight: '500', marginBottom: '12px', lineHeight: '1.3' }}>
+                  <p style={{
+                    fontFamily: 'var(--font-lora)',
+                    color: t.inputText,
+                    fontSize: '17px',
+                    fontWeight: '500',
+                    marginBottom: '8px',
+                    lineHeight: '1.3',
+                  }}>
                     {entry.title}
                   </p>
                 )}
 
-                {/* Body preview — 3 lines */}
+                {/* Body preview */}
                 <p style={{
-                  fontFamily: 'var(--font-lora)', color: t.bodyText,
-                  fontSize: '16px', lineHeight: '1.9',
-                  overflow: 'hidden', display: '-webkit-box',
-                  WebkitLineClamp: 3, WebkitBoxOrient: 'vertical' as const
+                  fontFamily: 'var(--font-lora)',
+                  color: t.bodyText,
+                  fontSize: '14px',
+                  lineHeight: '1.8',
+                  overflow: 'hidden',
+                  display: '-webkit-box',
+                  WebkitLineClamp: 3,
+                  WebkitBoxOrient: 'vertical' as const,
+                  marginBottom: '12px',
                 }}>
                   {entry.body}
                 </p>
 
-                {/* Attribution + read hint */}
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '16px' }}>
-                  <p style={{ fontSize: '11px', color: t.textDim, letterSpacing: '0.06em', fontStyle: 'italic', fontFamily: 'var(--font-lora)' }}>
+                {/* Footer */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <p style={{
+                    fontSize: '11px',
+                    color: t.textDim,
+                    fontStyle: 'italic',
+                    fontFamily: 'var(--font-lora)',
+                  }}>
                     — a writer
                   </p>
-                  <p style={{ fontSize: '11px', color: t.textDim, letterSpacing: '0.06em', textTransform: 'uppercase' }}>
+                  <p style={{
+                    fontSize: '10px',
+                    color: t.textDim,
+                    letterSpacing: '0.08em',
+                    textTransform: 'uppercase',
+                    fontFamily: 'var(--font-lora)',
+                  }}>
                     read →
                   </p>
                 </div>
@@ -159,26 +205,26 @@ export default function Community() {
           </div>
         )}
 
-        {/* Footer */}
-        <div style={{ textAlign: 'center', marginTop: '4rem' }}>
-          <p style={{ fontFamily: 'var(--font-lora)', color: t.textDim, fontSize: '13px', fontStyle: 'italic' }}>
-            Entries disappear after 7 days. Write for yourself. Share when it feels right.
-          </p>
-        </div>
+        {/* Footer note */}
+        <p style={{
+          fontFamily: 'var(--font-lora)',
+          color: t.textDim,
+          fontSize: '12px',
+          fontStyle: 'italic',
+          marginTop: '3rem',
+          letterSpacing: '0.02em',
+        }}>
+          Entries disappear after 7 days. Write for yourself. Share when it feels right.
+        </p>
       </div>
 
-      {/* Full page entry read — same page-turn feel as memories */}
+      {/* Full page read — same page turn as Memories */}
       {selectedEntry && (
-        <div
-          style={{
-            position: 'fixed',
-            inset: 0,
-            zIndex: 80,
-            background: t.bg,
-            overflowY: 'auto',
-            animation: 'pageIn 0.35s cubic-bezier(0.16, 1, 0.3, 1)',
-          }}
-        >
+        <div style={{
+          position: 'fixed', inset: 0, zIndex: 80,
+          background: t.bg, overflowY: 'auto',
+          animation: 'pageIn 0.35s cubic-bezier(0.16, 1, 0.3, 1)',
+        }}>
           <div style={{
             position: 'fixed', bottom: '-100px', left: '-100px',
             width: '600px', height: '600px', borderRadius: '50%',
@@ -197,11 +243,11 @@ export default function Community() {
               onClick={() => setSelectedEntry(null)}
               style={{
                 background: 'none', border: 'none', cursor: 'pointer',
-                color: t.textDim, fontSize: '12px',
+                color: t.textDim, fontSize: '11px',
                 letterSpacing: '0.08em', textTransform: 'uppercase',
                 marginBottom: '4rem', display: 'flex', alignItems: 'center',
                 gap: '6px', padding: 0, fontFamily: 'var(--font-lora)',
-                transition: 'color 0.2s ease',
+                transition: 'color 0.15s ease',
               }}
               onMouseEnter={(e) => e.currentTarget.style.color = t.accent}
               onMouseLeave={(e) => e.currentTarget.style.color = t.textDim}
@@ -210,21 +256,26 @@ export default function Community() {
             </button>
 
             <p style={{
-              fontSize: '11px', color: t.textDim,
-              letterSpacing: '0.14em', textTransform: 'uppercase',
-              marginBottom: '1rem', animation: 'fadeUp 0.5s ease 0.1s both',
+              fontSize: '11px', color: t.textFaint,
+              fontStyle: 'italic', fontFamily: 'var(--font-lora)',
+              marginBottom: '1.5rem',
+              animation: 'fadeUp 0.5s ease 0.1s both',
             }}>
               {new Date(selectedEntry.created_at).toLocaleDateString('en-US', {
                 weekday: 'long', month: 'long', day: 'numeric', year: 'numeric'
               })}
-              {selectedEntry.mood && ` · ${selectedEntry.mood}`}
+              {selectedEntry.mood && ` · ${selectedEntry.mood.split(' ').slice(1).join(' ')}`}
             </p>
 
             {selectedEntry.title && (
               <h2 style={{
-                fontFamily: 'var(--font-lora)', color: t.accent,
-                fontSize: '32px', fontWeight: '500',
-                marginBottom: '2rem', lineHeight: '1.3',
+                fontFamily: 'var(--font-lora)',
+                color: t.inputText,
+                fontSize: '30px',
+                fontWeight: '600',
+                marginBottom: '2rem',
+                lineHeight: '1.25',
+                letterSpacing: '-0.01em',
                 animation: 'fadeUp 0.5s ease 0.15s both',
               }}>
                 {selectedEntry.title}
@@ -232,25 +283,33 @@ export default function Community() {
             )}
 
             <div style={{
-              width: '48px', height: '1px',
-              background: t.cardBorder, marginBottom: '2.5rem',
+              width: '32px', height: '1px',
+              background: t.cardBorder, marginBottom: '2rem',
               animation: 'fadeUp 0.5s ease 0.2s both',
             }} />
 
             <p style={{
-              fontFamily: 'var(--font-lora)', color: t.inputText,
-              fontSize: '19px', lineHeight: '2.2', whiteSpace: 'pre-wrap',
+              fontFamily: 'var(--font-lora)',
+              color: t.bodyText,
+              fontSize: '18px',
+              lineHeight: '2.1',
+              whiteSpace: 'pre-wrap',
               animation: 'fadeUp 0.6s ease 0.25s both',
             }}>
               {selectedEntry.body}
             </p>
 
             <div style={{
-              marginTop: '4rem', paddingTop: '2rem',
+              marginTop: '4rem', paddingTop: '1.5rem',
               borderTop: `1px solid ${t.entryBorder}`,
               animation: 'fadeUp 0.5s ease 0.35s both',
             }}>
-              <p style={{ fontFamily: 'var(--font-lora)', color: t.textDim, fontSize: '13px', fontStyle: 'italic' }}>
+              <p style={{
+                fontFamily: 'var(--font-lora)',
+                color: t.textDim,
+                fontSize: '13px',
+                fontStyle: 'italic',
+              }}>
                 — a writer
               </p>
             </div>

@@ -114,7 +114,7 @@ export default function NavDrawer() {
             letterSpacing: '0.12em',
             textTransform: 'uppercase',
           }}>
-            a private record
+            your personal journal
           </p>
         </Link>
 
@@ -222,7 +222,7 @@ export default function NavDrawer() {
             onMouseLeave={(e) => e.currentTarget.style.color = t.textDim}
           >
             <span style={{ fontSize: '13px' }}>☕</span>
-            support mylife
+            support me!
           </a>
 
           {/* Sign out */}

@@ -97,10 +97,29 @@ sky: {
   inputText: '#0f172a',
   bodyText: '#1e293b',
   entryBodyText: '#475569',
-},
+  },
+  nostalgic: {
+    bg: '#141008',
+    glow1: 'rgba(255,188,109,0.09)',
+    glow2: 'rgba(54,187,217,0.06)',
+    glow3: 'rgba(207,97,32,0.07)',
+    cardBg: '#1e1508',
+    cardBorder: '#3a2a10',
+    entryBg: '#1a1208',
+    entryBorder: '#2e2010',
+    accent: '#ffbc6d',
+    accentStrong: '#cf6120',
+    textMuted: '#c8a870',
+    textFaint: '#8a7040',
+    textDim: '#5a4820',
+    inputBg: '#141008',
+    inputText: '#f0d890',
+    bodyText: '#d4b880',
+    entryBodyText: '#a08850',
+  },
 }
 
-export type Mode = 'fire' | 'rain' | 'midnight' | 'forest' | 'sky'
+export type Mode = 'fire' | 'rain' | 'midnight' | 'forest' | 'sky' | 'nostalgic'
 
 export const modeOptions: { mode: Mode; emoji: string; label: string }[] = [
   { mode: 'fire', emoji: '🔥', label: 'Firelight' },
@@ -108,6 +127,7 @@ export const modeOptions: { mode: Mode; emoji: string; label: string }[] = [
   { mode: 'midnight', emoji: '🌙', label: 'Midnight' },
   { mode: 'forest', emoji: '🌿', label: 'Forest' },
   { mode: 'sky', emoji: '☁️', label: 'Sky' },
+  { mode: 'nostalgic', emoji: '📷', label: 'Nostalgic' },
 ]
 
 const ThemeContext = createContext<{

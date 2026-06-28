@@ -13,6 +13,16 @@ const navItems = [
   { label: 'Profile', href: '/profile' },
 ]
 
+const dotColors: Record<string, string> = {
+  arcadia: '#36BBD9',
+  rain: '#86A6B4',
+  firelight: '#D68A4F',
+  dawn: '#D6A08C',
+  dusk: '#B083A0',
+  midnight: '#7C89B0',
+  sky: '#5B8DB8',
+}
+
 export default function NavDrawer() {
   const [open, setOpen] = useState(false)
   const [authed, setAuthed] = useState(false)
@@ -41,7 +51,7 @@ export default function NavDrawer() {
 
   return (
     <>
-      {/* Hamburger — three lines, top left */}
+      {/* Hamburger */}
       <button
         onClick={() => setOpen(true)}
         style={{
@@ -104,11 +114,11 @@ export default function NavDrawer() {
             letterSpacing: '0.12em',
             textTransform: 'uppercase',
           }}>
-            your personal journal
+            a private record
           </p>
         </Link>
 
-        {/* Nav items — no icons, just text */}
+        {/* Nav items */}
         <nav style={{ display: 'flex', flexDirection: 'column', gap: '2px', marginBottom: '2.5rem' }}>
           {navItems.map((item) => {
             const isActive = pathname === item.href
@@ -139,12 +149,7 @@ export default function NavDrawer() {
           })}
         </nav>
 
-        {/*
-          ATMOSPHERE PICKER
-          Dot indicators instead of emoji — cleaner, more analog.
-          Each dot is the theme's accent color. Active has a ring.
-          Label sits to the right.
-        */}
+        {/* Atmosphere picker */}
         <div style={{ marginBottom: '2rem' }}>
           <p style={{
             fontSize: '10px', color: t.textDim,
@@ -156,15 +161,6 @@ export default function NavDrawer() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
             {modeOptions.map((option) => {
               const isActive = mode === option.mode
-                const dotColors: Record<string, string> = {
-                arcadia: '#36BBD9',
-                rain: '#86A6B4',
-                firelight: '#D68A4F',
-                dawn: '#D6A08C',
-                dusk: '#B083A0',
-                midnight: '#7C89B0',
-                sky: '#5B8DB8',
-                }
               return (
                 <button
                   key={option.mode}
@@ -177,7 +173,6 @@ export default function NavDrawer() {
                     transition: 'all 0.15s ease',
                   }}
                 >
-                  {/* Dot indicator */}
                   <div style={{
                     width: '7px', height: '7px', borderRadius: '50%',
                     background: dotColors[option.mode],
@@ -201,9 +196,36 @@ export default function NavDrawer() {
           </div>
         </div>
 
-        {/* Sign out */}
+        {/* Bottom — Ko-fi + sign out */}
         <div style={{ marginTop: 'auto' }}>
           <div style={{ height: '1px', background: t.cardBorder, marginBottom: '1rem' }} />
+
+          {/* Ko-fi */}
+          <a
+            href="https://ko-fi.com/H1D4228PA0"
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              padding: '8px 10px',
+              borderRadius: '4px',
+              textDecoration: 'none',
+              fontSize: '12px',
+              fontFamily: 'var(--font-lora)',
+              color: t.textDim,
+              transition: 'color 0.15s ease',
+              marginBottom: '2px',
+            }}
+            onMouseEnter={(e) => e.currentTarget.style.color = t.accent}
+            onMouseLeave={(e) => e.currentTarget.style.color = t.textDim}
+          >
+            <span style={{ fontSize: '13px' }}>☕</span>
+            support mylife
+          </a>
+
+          {/* Sign out */}
           <button
             onClick={handleSignOut}
             style={{

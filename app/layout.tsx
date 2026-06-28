@@ -32,6 +32,7 @@ export default function RootLayout({
             <AudioPlayer />
           </AudioProvider>
         </ThemeProvider>
+      <Analytics />
       </body>
     </html>
   );

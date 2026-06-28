@@ -7,10 +7,10 @@ import { useTheme, modeOptions, Mode } from '@/lib/theme-context'
 import { supabase } from '@/lib/supabase'
 
 const navItems = [
-  { label: 'Community', href: '/community', icon: '🌍' },
-  { label: 'Journal', href: '/journal', icon: '✏️' },
-  { label: 'Memories', href: '/memories', icon: '📖' },
-  { label: 'Profile', href: '/profile', icon: '👤' },
+  { label: 'Community', href: '/community' },
+  { label: 'Journal', href: '/journal' },
+  { label: 'Memories', href: '/memories' },
+  { label: 'Profile', href: '/profile' },
 ]
 
 export default function NavDrawer() {
@@ -24,11 +24,9 @@ export default function NavDrawer() {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setAuthed(!!session)
     })
-
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setAuthed(!!session)
     })
-
     return () => subscription.unsubscribe()
   }, [])
 
@@ -43,26 +41,19 @@ export default function NavDrawer() {
 
   return (
     <>
-      {/* Hamburger button */}
+      {/* Hamburger — three lines, top left */}
       <button
         onClick={() => setOpen(true)}
         style={{
-          position: 'fixed',
-          top: '20px',
-          left: '20px',
-          zIndex: 50,
-          background: 'none',
-          border: 'none',
-          cursor: 'pointer',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '5px',
-          padding: '4px',
+          position: 'fixed', top: '20px', left: '20px',
+          zIndex: 50, background: 'none', border: 'none',
+          cursor: 'pointer', display: 'flex',
+          flexDirection: 'column', gap: '5px', padding: '4px',
         }}
       >
-        <span style={{ display: 'block', width: '20px', height: '1.5px', background: t.textMuted }} />
-        <span style={{ display: 'block', width: '20px', height: '1.5px', background: t.textMuted }} />
-        <span style={{ display: 'block', width: '20px', height: '1.5px', background: t.textMuted }} />
+        <span style={{ display: 'block', width: '20px', height: '1px', background: t.textMuted }} />
+        <span style={{ display: 'block', width: '14px', height: '1px', background: t.textMuted }} />
+        <span style={{ display: 'block', width: '20px', height: '1px', background: t.textMuted }} />
       </button>
 
       {/* Backdrop */}
@@ -70,53 +61,55 @@ export default function NavDrawer() {
         <div
           onClick={() => setOpen(false)}
           style={{
-            position: 'fixed',
-            inset: 0,
-            background: 'rgba(0,0,0,0.5)',
-            zIndex: 60,
-            backdropFilter: 'blur(2px)',
+            position: 'fixed', inset: 0,
+            background: 'rgba(0,0,0,0.6)',
+            zIndex: 60, backdropFilter: 'blur(3px)',
           }}
         />
       )}
 
       {/* Drawer */}
-      <div
-        style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          height: '100vh',
-          width: '260px',
-          background: t.cardBg,
-          borderRight: `1px solid ${t.cardBorder}`,
-          zIndex: 70,
-          display: 'flex',
-          flexDirection: 'column',
-          padding: '2rem 1.5rem',
-          transform: open ? 'translateX(0)' : 'translateX(-100%)',
-          transition: 'transform 0.3s ease',
-          boxShadow: open ? '4px 0 24px rgba(0,0,0,0.4)' : 'none',
-          overflowY: 'auto',
-        }}
-      >
-        {/* Logo */}
+      <div style={{
+        position: 'fixed', top: 0, left: 0,
+        height: '100vh', width: '240px',
+        background: t.cardBg,
+        borderRight: `1px solid ${t.cardBorder}`,
+        zIndex: 70, display: 'flex', flexDirection: 'column',
+        padding: '2rem 1.5rem',
+        transform: open ? 'translateX(0)' : 'translateX(-100%)',
+        transition: 'transform 0.25s ease',
+        boxShadow: open ? `6px 0 32px ${t.shadow}` : 'none',
+        overflowY: 'auto',
+      }}>
+
+        {/* Logo + subtitle */}
         <Link
           href="/journal"
           onClick={() => setOpen(false)}
-          style={{
-            fontFamily: 'var(--font-lora)',
-            color: t.accent,
-            fontSize: '22px',
-            textDecoration: 'none',
-            marginBottom: '2.5rem',
-            display: 'block'
-          }}
+          style={{ textDecoration: 'none', marginBottom: '2.5rem', display: 'block' }}
         >
-          MyLife
+          <p style={{
+            fontFamily: 'var(--font-lora)',
+            color: t.inputText,
+            fontSize: '20px',
+            fontWeight: '600',
+            marginBottom: '2px',
+            letterSpacing: '-0.01em',
+          }}>
+            MyLife
+          </p>
+          <p style={{
+            fontSize: '10px',
+            color: t.textDim,
+            letterSpacing: '0.12em',
+            textTransform: 'uppercase',
+          }}>
+            a private record
+          </p>
         </Link>
 
-        {/* Nav items */}
-        <nav style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginBottom: '2rem' }}>
+        {/* Nav items — no icons, just text */}
+        <nav style={{ display: 'flex', flexDirection: 'column', gap: '2px', marginBottom: '2.5rem' }}>
           {navItems.map((item) => {
             const isActive = pathname === item.href
             return (
@@ -125,23 +118,21 @@ export default function NavDrawer() {
                 href={item.href}
                 onClick={() => setOpen(false)}
                 style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '10px',
-                  padding: '10px 12px',
-                  borderRadius: '8px',
+                  display: 'block',
+                  padding: '8px 10px',
+                  borderRadius: '4px',
                   textDecoration: 'none',
-                  fontSize: '15px',
+                  fontSize: '14px',
                   fontFamily: 'var(--font-lora)',
                   color: isActive ? t.accent : t.textMuted,
-                  background: isActive ? t.entryBg : 'transparent',
-                  border: isActive ? `1px solid ${t.cardBorder}` : '1px solid transparent',
-                  transition: 'all 0.2s ease'
+                  background: isActive ? `${t.accent}12` : 'transparent',
+                  borderLeft: isActive ? `2px solid ${t.accent}` : '2px solid transparent',
+                  transition: 'all 0.15s ease',
+                  paddingLeft: isActive ? '12px' : '10px',
                 }}
-                onMouseEnter={(e) => { if (!isActive) e.currentTarget.style.color = t.accent }}
+                onMouseEnter={(e) => { if (!isActive) e.currentTarget.style.color = t.inputText }}
                 onMouseLeave={(e) => { if (!isActive) e.currentTarget.style.color = t.textMuted }}
               >
-                <span style={{ fontSize: '16px' }}>{item.icon}</span>
                 {item.label}
               </Link>
             )
@@ -150,78 +141,80 @@ export default function NavDrawer() {
 
         {/*
           ATMOSPHERE PICKER
-          Five moods to set the vibe for writing tonight.
-          Each one changes the full color palette globally.
-          To improve: animate transition between themes, pair each with a playlist mood.
+          Dot indicators instead of emoji — cleaner, more analog.
+          Each dot is the theme's accent color. Active has a ring.
+          Label sits to the right.
         */}
         <div style={{ marginBottom: '2rem' }}>
           <p style={{
-            fontSize: '11px',
-            color: t.textDim,
-            letterSpacing: '0.1em',
-            textTransform: 'uppercase',
-            marginBottom: '10px',
-            paddingLeft: '4px'
+            fontSize: '10px', color: t.textDim,
+            letterSpacing: '0.12em', textTransform: 'uppercase',
+            marginBottom: '12px', paddingLeft: '2px'
           }}>
             Atmosphere
           </p>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
             {modeOptions.map((option) => {
               const isActive = mode === option.mode
+              const dotColors: Record<string, string> = {
+                nostalgic: '#36BBD9',
+                rain: '#86A6B4',
+                firelight: '#D68A4F',
+                dawn: '#D6A08C',
+                dusk: '#B083A0',
+                midnight: '#7C89B0',
+              }
               return (
                 <button
                   key={option.mode}
                   onClick={() => { setMode(option.mode as Mode); setOpen(false) }}
                   style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '10px',
-                    padding: '10px 12px',
-                    borderRadius: '8px',
-                    background: isActive ? t.entryBg : 'transparent',
-                    border: isActive ? `1px solid ${t.accent}` : '1px solid transparent',
-                    color: isActive ? t.accent : t.textMuted,
-                    fontSize: '14px',
-                    fontFamily: 'var(--font-lora)',
-                    cursor: 'pointer',
-                    textAlign: 'left',
-                    transition: 'all 0.2s ease'
+                    display: 'flex', alignItems: 'center', gap: '10px',
+                    padding: '7px 10px', borderRadius: '4px',
+                    background: 'transparent', border: 'none',
+                    cursor: 'pointer', textAlign: 'left',
+                    transition: 'all 0.15s ease',
                   }}
-                  onMouseEnter={(e) => { if (!isActive) e.currentTarget.style.color = t.accent }}
-                  onMouseLeave={(e) => { if (!isActive) e.currentTarget.style.color = t.textMuted }}
                 >
-                  <span style={{ fontSize: '16px' }}>{option.emoji}</span>
-                  {option.label}
+                  {/* Dot indicator */}
+                  <div style={{
+                    width: '7px', height: '7px', borderRadius: '50%',
+                    background: dotColors[option.mode],
+                    flexShrink: 0,
+                    outline: isActive ? `2px solid ${dotColors[option.mode]}` : '2px solid transparent',
+                    outlineOffset: '2px',
+                    opacity: isActive ? 1 : 0.45,
+                    transition: 'all 0.15s ease',
+                  }} />
+                  <span style={{
+                    fontSize: '13px',
+                    fontFamily: 'var(--font-lora)',
+                    color: isActive ? t.inputText : t.textFaint,
+                    transition: 'color 0.15s ease',
+                  }}>
+                    {option.label}
+                  </span>
                 </button>
               )
             })}
           </div>
         </div>
 
-        {/* Sign out — bottom */}
+        {/* Sign out */}
         <div style={{ marginTop: 'auto' }}>
+          <div style={{ height: '1px', background: t.cardBorder, marginBottom: '1rem' }} />
           <button
             onClick={handleSignOut}
             style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px',
-              padding: '10px 12px',
-              borderRadius: '8px',
-              background: 'none',
-              border: 'none',
-              color: t.textDim,
-              fontSize: '14px',
-              cursor: 'pointer',
-              fontFamily: 'var(--font-lora)',
-              transition: 'color 0.2s ease',
-              textAlign: 'left',
-              width: '100%'
+              display: 'block', width: '100%', textAlign: 'left',
+              padding: '8px 10px', background: 'none', border: 'none',
+              color: t.textDim, fontSize: '13px', cursor: 'pointer',
+              fontFamily: 'var(--font-lora)', transition: 'color 0.15s ease',
             }}
-            onMouseEnter={(e) => e.currentTarget.style.color = '#e05555'}
+            onMouseEnter={(e) => e.currentTarget.style.color = '#c05050'}
             onMouseLeave={(e) => e.currentTarget.style.color = t.textDim}
           >
-            ← Sign out
+            sign out
           </button>
         </div>
       </div>

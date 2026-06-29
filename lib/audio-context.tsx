@@ -49,6 +49,7 @@ const AudioContext = createContext<AudioContextType>({
 
 export function AudioProvider({ children }: { children: ReactNode }) {
   const [isPlaying, setIsPlaying] = useState(false)
+  const [hasInteracted, setHasInteracted] = useState(false)
   const [isShuffled, setIsShuffled] = useState(true)
   const [queue, setQueue] = useState<Track[]>(() => shuffleArray(playlist))
   const [queueIndex, setQueueIndex] = useState(0)
@@ -56,10 +57,21 @@ export function AudioProvider({ children }: { children: ReactNode }) {
 
   const currentTrack = queue[queueIndex]
 
+  // Auto-start on first user interaction anywhere on the page
+  useEffect(() => {
+    function handleFirstInteraction() {
+      if (!hasInteracted) {
+        setHasInteracted(true)
+        setIsPlaying(true)
+      }
+    }
+    window.addEventListener('click', handleFirstInteraction, { once: true })
+    return () => window.removeEventListener('click', handleFirstInteraction)
+  }, [hasInteracted])
+
   useEffect(() => {
     audioRef.current = new Audio(currentTrack.file)
     audioRef.current.addEventListener('ended', handleTrackEnd)
-
     return () => {
       audioRef.current?.pause()
       audioRef.current?.removeEventListener('ended', handleTrackEnd)
@@ -97,13 +109,8 @@ export function AudioProvider({ children }: { children: ReactNode }) {
     setIsPlaying((prev) => !prev)
   }
 
-  function skipNext() {
-    goToNext()
-  }
-
-  function skipPrev() {
-    goToPrev()
-  }
+  function skipNext() { goToNext() }
+  function skipPrev() { goToPrev() }
 
   function toggleShuffle() {
     setIsShuffled((prev) => {

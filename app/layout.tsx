@@ -3,6 +3,7 @@ import { Lora } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/lib/theme-context";
 import { AudioProvider } from "@/lib/audio-context";
+import { WeatherProvider } from "@/lib/weather-context";
 import AudioPlayer from "@/components/AudioPlayer";
 import NavDrawer from "@/components/NavDrawer";
 import { Analytics } from '@vercel/analytics/react'
@@ -26,13 +27,15 @@ export default function RootLayout({
     <html lang="en" className={`${lora.variable} h-full`}>
       <body className="min-h-full flex flex-col">
         <ThemeProvider>
-          <AudioProvider>
-            <NavDrawer />
-            {children}
-            <AudioPlayer />
-          </AudioProvider>
+          <WeatherProvider>
+            <AudioProvider>
+              <NavDrawer />
+              {children}
+              <AudioPlayer />
+            </AudioProvider>
+          </WeatherProvider>
         </ThemeProvider>
-      <Analytics />
+        <Analytics />
       </body>
     </html>
   );

@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
-import { useTheme } from '@/lib/theme-context'
+import { useWeather } from '@/lib/weather-context'
 
 const BLOCKED_TERMS = [
   'nigger', 'nigga', 'faggot', 'chink', 'spic', 'kike',
@@ -30,7 +30,7 @@ export default function EntryDetail({ params }: { params: Promise<{ id: string }
   const [saving, setSaving] = useState(false)
   const [sharing, setSharing] = useState(false)
   const router = useRouter()
-  const { t } = useTheme()
+  const { background: bg } = useWeather()
 
   useEffect(() => {
     async function getEntry() {
@@ -83,7 +83,7 @@ export default function EntryDetail({ params }: { params: Promise<{ id: string }
       if (!confirm('Share this entry anonymously on the community feed this week? It disappears after 7 days.')) { setSharing(false); return }
       const fullText = `${entry.title || ''} ${entry.body}`
       if (containsBlockedContent(fullText)) {
-        alert('This entry contains content that isn\'t allowed on the community feed.')
+        alert("This entry contains content that isn't allowed on the community feed.")
         setSharing(false)
         return
       }
@@ -107,28 +107,48 @@ export default function EntryDetail({ params }: { params: Promise<{ id: string }
 
   if (loading) {
     return (
-      <main className="min-h-screen flex items-center justify-center" style={{ background: t.bg }}>
-        <p style={{ color: t.textFaint, fontFamily: 'var(--font-lora)', fontStyle: 'italic' }}>Loading...</p>
+      <main className="min-h-screen flex items-center justify-center"
+        style={{ background: bg.gradient }}>
+        <p style={{ color: bg.textColor, fontFamily: 'var(--font-lora)', fontStyle: 'italic', opacity: 0.6 }}>
+          Loading...
+        </p>
       </main>
     )
   }
 
   if (notFound) {
     return (
-      <main className="min-h-screen flex flex-col items-center justify-center" style={{ background: t.bg }}>
-        <p style={{ color: t.textFaint, fontFamily: 'var(--font-lora)', fontStyle: 'italic', marginBottom: '1rem' }}>Entry not found.</p>
-        <Link href="/journal" style={{ color: t.accent, fontFamily: 'var(--font-lora)', fontSize: '13px' }}>← back to journal</Link>
+      <main className="min-h-screen flex flex-col items-center justify-center"
+        style={{ background: bg.gradient }}>
+        <p style={{ color: bg.textColor, fontFamily: 'var(--font-lora)', fontStyle: 'italic', opacity: 0.6, marginBottom: '1rem' }}>
+          Entry not found.
+        </p>
+        <Link href="/journal" style={{ color: bg.accentColor, fontFamily: 'var(--font-lora)', fontSize: '13px', textDecoration: 'none' }}>
+          ← back to journal
+        </Link>
       </main>
     )
   }
 
-  return (
-    <main className="min-h-screen relative overflow-hidden" style={{ background: t.bg }}>
-      <div className="absolute bottom-0 left-0 w-96 h-96 rounded-full pointer-events-none" style={{ background: `radial-gradient(circle, ${t.glow1} 0%, transparent 70%)` }} />
-      <div className="absolute top-0 right-0 w-72 h-72 rounded-full pointer-events-none" style={{ background: `radial-gradient(circle, ${t.glow2} 0%, transparent 70%)` }} />
-      <div className="absolute pointer-events-none" style={{ top: 0, left: '50%', width: '600px', height: '600px', transform: 'translate(-50%, -60%)', borderRadius: '50%', background: `radial-gradient(circle, ${t.glow3} 0%, transparent 70%)` }} />
+  const entryDate = new Date(entry.created_at)
+  const dayNum = entryDate.getDate()
+  const monthName = entryDate.toLocaleDateString('en-US', { month: 'long' })
+  const dayName = entryDate.toLocaleDateString('en-US', { weekday: 'long' })
+  const yearNum = entryDate.getFullYear()
+  const entryTime = entryDate.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
 
-      <div className="relative z-10 max-w-xl mx-auto px-6 py-10">
+  return (
+    <main
+      className="min-h-screen relative overflow-hidden"
+      style={{ background: bg.gradient, transition: 'background 2s ease' }}
+    >
+      {/* Vignette */}
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{ background: 'radial-gradient(ellipse at center, transparent 60%, rgba(0,0,0,0.15) 100%)' }}
+      />
+
+      <div className="relative z-10 max-w-lg mx-auto px-5 py-8">
 
         {/* Back */}
         <Link
@@ -136,152 +156,224 @@ export default function EntryDetail({ params }: { params: Promise<{ id: string }
           style={{
             display: 'inline-block',
             fontSize: '11px',
-            color: t.textDim,
+            color: bg.textColor,
+            opacity: 0.5,
             textDecoration: 'none',
-            letterSpacing: '0.08em',
+            letterSpacing: '0.1em',
             textTransform: 'uppercase',
-            marginBottom: '2.5rem',
+            marginBottom: '2rem',
             fontFamily: 'var(--font-lora)',
-            transition: 'color 0.15s ease',
+            transition: 'opacity 0.15s ease',
           }}
-          onMouseEnter={(e) => e.currentTarget.style.color = t.accent}
-          onMouseLeave={(e) => e.currentTarget.style.color = t.textDim}
+          onMouseEnter={(e) => e.currentTarget.style.opacity = '0.9'}
+          onMouseLeave={(e) => e.currentTarget.style.opacity = '0.5'}
         >
           ← journal
         </Link>
 
-        {/* Date and mood */}
-        <p style={{
-          fontSize: '11px',
-          color: t.textFaint,
-          letterSpacing: '0.08em',
-          fontStyle: 'italic',
-          fontFamily: 'var(--font-lora)',
-          marginBottom: '1.5rem',
+        {/*
+          DATE HEADER — Your Name style
+          Large day number, month, day name, time, weather stamp
+          This is the memory — you remember when and where you were
+        */}
+        <div style={{
+          background: bg.cardBg,
+          borderRadius: '16px 16px 0 0',
+          padding: '1.5rem',
+          backdropFilter: 'blur(8px)',
+          borderBottom: `1px solid ${bg.cardBorder}`,
+          marginBottom: '0',
         }}>
-          {new Date(entry.created_at).toLocaleDateString('en-US', {
-            weekday: 'long', month: 'long', day: 'numeric', year: 'numeric'
-          })}
-          {entry.mood && ` · ${entry.mood.split(' ').slice(1).join(' ')}`}
-        </p>
-
-        {isEditing ? (
-          /* Edit mode */
-          <>
-            <input
-              type="text"
-              placeholder="Title (optional)"
-              value={editTitle}
-              onChange={(e) => setEditTitle(e.target.value)}
-              style={{
-                width: '100%', background: 'transparent', border: 'none',
-                borderBottom: `1px solid ${t.cardBorder}`,
-                color: t.inputText, fontFamily: 'var(--font-lora)',
-                fontSize: '26px', fontStyle: 'italic',
-                paddingBottom: '10px', marginBottom: '1.5rem',
-                outline: 'none', boxSizing: 'border-box'
-              }}
-            />
-            <textarea
-              value={editBody}
-              onChange={(e) => setEditBody(e.target.value)}
-              rows={14}
-              style={{
-                width: '100%', background: 'transparent', border: 'none',
-                color: t.bodyText, fontFamily: 'var(--font-lora)',
-                fontSize: '17px', lineHeight: '2.1',
-                resize: 'none', outline: 'none', boxSizing: 'border-box'
-              }}
-            />
-            <div style={{ display: 'flex', gap: '10px', marginTop: '1.5rem' }}>
-              <button
-                onClick={handleSaveEdit}
-                disabled={saving}
-                style={{
-                  fontSize: '12px', padding: '7px 18px', borderRadius: '4px',
-                  background: t.accent, color: t.bg, border: 'none',
-                  cursor: 'pointer', fontFamily: 'var(--font-lora)',
-                  opacity: saving ? 0.7 : 1, letterSpacing: '0.03em',
-                }}
-              >
-                {saving ? 'saving...' : 'save changes'}
-              </button>
-              <button
-                onClick={() => { setEditTitle(entry.title || ''); setEditBody(entry.body || ''); setIsEditing(false) }}
-                style={{
-                  fontSize: '12px', padding: '7px 18px', borderRadius: '4px',
-                  background: 'none', color: t.textMuted,
-                  border: `1px solid ${t.cardBorder}`,
-                  cursor: 'pointer', fontFamily: 'var(--font-lora)',
-                }}
-              >
-                cancel
-              </button>
-            </div>
-          </>
-        ) : (
-          /* Read mode */
-          <>
-            {entry.title && (
-              <h1 style={{
+          <div style={{ display: 'flex', alignItems: 'flex-start', gap: '16px' }}>
+            {/* Large day number */}
+            <div style={{ flexShrink: 0 }}>
+              <p style={{
                 fontFamily: 'var(--font-lora)',
-                color: t.inputText,
-                fontSize: '32px',
-                fontWeight: '600',
-                marginBottom: '2rem',
-                lineHeight: '1.25',
-                letterSpacing: '-0.01em',
+                color: bg.accentColor,
+                fontSize: '56px',
+                fontWeight: '300',
+                lineHeight: '1',
+                letterSpacing: '-0.03em',
               }}>
-                {entry.title}
-              </h1>
-            )}
-
-            {/* Pen stroke divider */}
-            <div style={{
-              width: '32px', height: '1px',
-              background: t.cardBorder, marginBottom: '2rem',
-            }} />
-
-            <div style={{
-              fontFamily: 'var(--font-lora)',
-              color: t.bodyText,
-              fontSize: '18px',
-              lineHeight: '2.1',
-              whiteSpace: 'pre-wrap',
-            }}>
-              {entry.body}
+                {dayNum}
+              </p>
             </div>
-          </>
-        )}
 
-        {/* Bottom actions */}
+            {/* Date details */}
+            <div style={{ paddingTop: '6px', flex: 1 }}>
+              <p style={{
+                fontFamily: 'var(--font-lora)',
+                color: bg.secondaryText,
+                fontSize: '16px',
+                fontWeight: '500',
+                marginBottom: '2px',
+              }}>
+                {monthName} {yearNum}
+              </p>
+              <p style={{
+                fontSize: '12px',
+                color: bg.dimText,
+                letterSpacing: '0.04em',
+                marginBottom: '6px',
+              }}>
+                {dayName}, {entryTime}
+              </p>
+              {/* Weather stamp from when entry was written */}
+              {entry.weather && (
+                <p style={{
+                  fontSize: '11px',
+                  color: bg.dimText,
+                  letterSpacing: '0.06em',
+                  textTransform: 'uppercase',
+                  fontFamily: 'var(--font-lora)',
+                }}>
+                  {entry.weather}
+                </p>
+              )}
+              {entry.mood && (
+                <p style={{
+                  fontSize: '11px',
+                  color: bg.accentColor,
+                  letterSpacing: '0.04em',
+                  marginTop: '4px',
+                  fontFamily: 'var(--font-lora)',
+                  fontStyle: 'italic',
+                }}>
+                  {entry.mood.split(' ').slice(1).join(' ')}
+                </p>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Entry content card */}
+        <div style={{
+          background: bg.cardBg,
+          borderRadius: '0 0 16px 16px',
+          padding: '1.5rem',
+          backdropFilter: 'blur(8px)',
+          boxShadow: '0 8px 32px rgba(0,0,0,0.08)',
+          marginBottom: '1rem',
+        }}>
+          {isEditing ? (
+            <>
+              <input
+                type="text"
+                placeholder="Title (optional)"
+                value={editTitle}
+                onChange={(e) => setEditTitle(e.target.value)}
+                style={{
+                  width: '100%', background: 'transparent', border: 'none',
+                  borderBottom: `1px solid ${bg.cardBorder}`,
+                  color: bg.secondaryText, fontFamily: 'var(--font-lora)',
+                  fontSize: '22px', fontStyle: 'italic',
+                  paddingBottom: '10px', marginBottom: '1.25rem',
+                  outline: 'none', boxSizing: 'border-box',
+                }}
+              />
+              <textarea
+                value={editBody}
+                onChange={(e) => setEditBody(e.target.value)}
+                rows={12}
+                style={{
+                  width: '100%', background: 'transparent', border: 'none',
+                  color: bg.secondaryText, fontFamily: 'var(--font-lora)',
+                  fontSize: '16px', lineHeight: '2',
+                  resize: 'none', outline: 'none', boxSizing: 'border-box',
+                }}
+              />
+              <div style={{ display: 'flex', gap: '10px', marginTop: '1rem', paddingTop: '1rem', borderTop: `1px solid ${bg.cardBorder}` }}>
+                <button
+                  onClick={handleSaveEdit}
+                  disabled={saving}
+                  style={{
+                    fontSize: '12px', padding: '8px 20px', borderRadius: '20px',
+                    background: bg.accentColor, color: '#ffffff', border: 'none',
+                    cursor: 'pointer', fontFamily: 'var(--font-lora)',
+                    opacity: saving ? 0.7 : 1, letterSpacing: '0.03em',
+                    boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+                  }}
+                >
+                  {saving ? 'saving...' : 'save changes'}
+                </button>
+                <button
+                  onClick={() => { setEditTitle(entry.title || ''); setEditBody(entry.body || ''); setIsEditing(false) }}
+                  style={{
+                    fontSize: '12px', padding: '8px 18px', borderRadius: '20px',
+                    background: 'transparent', color: bg.dimText,
+                    border: `1px solid ${bg.cardBorder}`,
+                    cursor: 'pointer', fontFamily: 'var(--font-lora)',
+                  }}
+                >
+                  cancel
+                </button>
+              </div>
+            </>
+          ) : (
+            <>
+              {entry.title && (
+                <h1 style={{
+                  fontFamily: 'var(--font-lora)',
+                  color: bg.secondaryText,
+                  fontSize: '26px',
+                  fontWeight: '600',
+                  marginBottom: '1.25rem',
+                  lineHeight: '1.25',
+                  letterSpacing: '-0.01em',
+                }}>
+                  {entry.title}
+                </h1>
+              )}
+
+              <div style={{
+                width: '28px', height: '1px',
+                background: bg.cardBorder,
+                marginBottom: '1.25rem',
+              }} />
+
+              <div style={{
+                fontFamily: 'var(--font-lora)',
+                color: bg.secondaryText,
+                fontSize: '16px',
+                lineHeight: '2',
+                whiteSpace: 'pre-wrap',
+                opacity: 0.85,
+              }}>
+                {entry.body}
+              </div>
+            </>
+          )}
+        </div>
+
+        {/* Actions — share, edit, delete */}
         {!isEditing && (
           <div style={{
-            marginTop: '4rem',
-            paddingTop: '1.5rem',
-            borderTop: `1px solid ${t.entryBorder}`,
+            background: bg.cardBg,
+            borderRadius: '12px',
+            padding: '1rem 1.25rem',
+            backdropFilter: 'blur(8px)',
             display: 'flex',
             flexDirection: 'column',
-            gap: '1.5rem',
+            gap: '1rem',
           }}>
 
             {/* Share */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div>
                 <p style={{
-                  fontSize: '11px', color: t.textMuted,
+                  fontSize: '11px', color: bg.secondaryText,
                   letterSpacing: '0.06em', textTransform: 'uppercase',
-                  marginBottom: '2px', fontFamily: 'var(--font-lora)',
+                  marginBottom: '2px', opacity: 0.7,
                 }}>
                   {entry.is_public ? '✦ shared this week' : 'share this week'}
                 </p>
                 <p style={{
-                  fontSize: '11px', color: t.textDim,
+                  fontSize: '11px', color: bg.dimText,
                   fontFamily: 'var(--font-lora)', fontStyle: 'italic',
                 }}>
                   {entry.is_public
-                    ? 'visible on the community feed anonymously'
-                    : 'one entry per week · anonymous · no comments'}
+                    ? 'visible on community feed anonymously'
+                    : 'one entry per week · anonymous'}
                 </p>
               </div>
               <button
@@ -289,33 +381,36 @@ export default function EntryDetail({ params }: { params: Promise<{ id: string }
                 disabled={sharing}
                 style={{
                   fontSize: '11px', padding: '6px 14px',
-                  borderRadius: '3px',
-                  background: entry.is_public ? `${t.accent}20` : 'transparent',
-                  color: entry.is_public ? t.accent : t.textDim,
-                  border: `1px solid ${entry.is_public ? t.accent : t.entryBorder}`,
-                  cursor: 'pointer', letterSpacing: '0.05em',
+                  borderRadius: '20px',
+                  background: entry.is_public ? bg.accentColor : 'transparent',
+                  color: entry.is_public ? '#ffffff' : bg.dimText,
+                  border: `1px solid ${entry.is_public ? bg.accentColor : bg.cardBorder}`,
+                  cursor: 'pointer',
                   fontFamily: 'var(--font-lora)',
                   transition: 'all 0.15s ease',
                   marginLeft: '16px', whiteSpace: 'nowrap',
+                  boxShadow: entry.is_public ? '0 2px 8px rgba(0,0,0,0.15)' : 'none',
                 }}
               >
                 {sharing ? '...' : entry.is_public ? 'unshare' : 'share'}
               </button>
             </div>
 
-            {/* Edit and delete */}
+            <div style={{ height: '1px', background: bg.cardBorder }} />
+
+            {/* Edit + delete */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <button
                 onClick={() => setIsEditing(true)}
                 style={{
-                  fontSize: '11px', color: t.textDim, background: 'none',
+                  fontSize: '11px', color: bg.dimText, background: 'none',
                   border: 'none', cursor: 'pointer',
                   letterSpacing: '0.06em', textTransform: 'uppercase',
                   fontFamily: 'var(--font-lora)',
                   transition: 'color 0.15s ease', padding: 0,
                 }}
-                onMouseEnter={(e) => e.currentTarget.style.color = t.accent}
-                onMouseLeave={(e) => e.currentTarget.style.color = t.textDim}
+                onMouseEnter={(e) => e.currentTarget.style.color = bg.accentColor}
+                onMouseLeave={(e) => e.currentTarget.style.color = bg.dimText}
               >
                 ✎ edit
               </button>
@@ -323,14 +418,14 @@ export default function EntryDetail({ params }: { params: Promise<{ id: string }
                 onClick={handleDelete}
                 disabled={deleting}
                 style={{
-                  fontSize: '11px', color: t.textDim, background: 'none',
+                  fontSize: '11px', color: bg.dimText, background: 'none',
                   border: 'none', cursor: 'pointer',
                   letterSpacing: '0.06em', textTransform: 'uppercase',
                   fontFamily: 'var(--font-lora)',
                   transition: 'color 0.15s ease', padding: 0,
                 }}
                 onMouseEnter={(e) => e.currentTarget.style.color = '#c05050'}
-                onMouseLeave={(e) => e.currentTarget.style.color = t.textDim}
+                onMouseLeave={(e) => e.currentTarget.style.color = bg.dimText}
               >
                 {deleting ? 'deleting...' : '× delete'}
               </button>

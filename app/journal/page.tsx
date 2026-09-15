@@ -4,13 +4,14 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
-import { useTheme } from '@/lib/theme-context'
+import { useWeather } from '@/lib/weather-context'
+import { formatWeatherStamp } from '@/lib/weather'
 
 const moodOptions = [
-  { value: '😊 good', label: 'good', emoji: '😊' },
-  { value: '😐 neutral', label: 'neutral', emoji: '😐' },
-  { value: '😔 sad', label: 'sad', emoji: '😔' },
-  { value: '❓unsure', label: 'unsure', emoji: '❓' },
+  { value: '😊 good', label: 'good' },
+  { value: '😐 neutral', label: 'neutral' },
+  { value: '😔 sad', label: 'sad' },
+  { value: '❓unsure', label: 'unsure' },
 ]
 
 function calculateStreak(entries: any[]): number {
@@ -66,8 +67,14 @@ export default function Journal() {
   const [body, setBody] = useState('')
   const [mood, setMood] = useState('')
   const [saving, setSaving] = useState(false)
+  const [locationAsked, setLocationAsked] = useState(false)
   const router = useRouter()
-  const { t, mode } = useTheme()
+  const { weather, background, timeOfDay, location, cityName, requestLocation } = useWeather()
+
+  const bg = background
+  const now = new Date()
+  const hour = now.getHours()
+  const timeStr = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
 
   useEffect(() => {
     async function getUser() {
@@ -84,6 +91,14 @@ export default function Journal() {
     getUser()
   }, [])
 
+  // Ask for location once if not already granted
+  useEffect(() => {
+    if (!locationAsked && !location) {
+      setLocationAsked(true)
+      requestLocation()
+    }
+  }, [locationAsked, location, requestLocation])
+
   async function handleSaveEntry() {
     if (!body.trim()) return
     if (body.length > 50000) {
@@ -98,7 +113,7 @@ export default function Journal() {
       .eq('user_id', user.id)
       .gte('created_at', oneHourAgo)
     if (count && count >= 10) {
-      alert('You\'ve written a lot in the last hour. Take a breath and come back soon.')
+      alert("You've written a lot in the last hour. Take a breath and come back soon.")
       setSaving(false)
       return
     }
@@ -107,6 +122,8 @@ export default function Journal() {
       title: title.trim() || null,
       body: body.trim(),
       mood: mood || null,
+      weather: weather ? formatWeatherStamp(weather) : null,
+      temperature: weather ? weather.temp : null,
     })
     if (!error) {
       setTitle('')
@@ -123,8 +140,11 @@ export default function Journal() {
 
   if (loading) {
     return (
-      <main className="min-h-screen flex items-center justify-center" style={{ background: t.bg }}>
-        <p style={{ color: t.textFaint, fontFamily: 'var(--font-lora)', fontStyle: 'italic' }}>Loading...</p>
+      <main className="min-h-screen flex items-center justify-center"
+        style={{ background: bg.gradient }}>
+        <p style={{ color: bg.textColor, fontFamily: 'var(--font-lora)', fontStyle: 'italic', opacity: 0.7 }}>
+          Loading...
+        </p>
       </main>
     )
   }
@@ -150,162 +170,232 @@ export default function Journal() {
     }
   })
 
-  // Sky mode uses dark text — button text needs to be readable
-  const isSky = mode === 'sky'
+  // Get time-based journal prompt
+  const prompts: Record<string, string> = {
+    'dawn': 'you woke before the world did.',
+    'morning': 'how did the morning find you?',
+    'golden-hour-am': 'the light is good right now.',
+    'midday': 'where are you in the middle of it all?',
+    'afternoon': 'what is the afternoon holding?',
+    'golden-hour-pm': 'what stayed with you today?',
+    'dusk': 'the day is behind you now.',
+    'night': 'just you and the page.',
+    'midnight': 'everyone else is asleep.',
+  }
+  const prompt = prompts[timeOfDay.period] || 'what stayed with you today?'
 
   return (
-    <main className="min-h-screen relative overflow-hidden transition-colors duration-500" style={{ background: t.bg }}>
-      <div className="absolute bottom-0 left-0 w-96 h-96 rounded-full pointer-events-none" style={{ background: `radial-gradient(circle, ${t.glow1} 0%, transparent 70%)` }} />
-      <div className="absolute top-0 right-0 w-72 h-72 rounded-full pointer-events-none" style={{ background: `radial-gradient(circle, ${t.glow2} 0%, transparent 70%)` }} />
-      <div className="absolute pointer-events-none" style={{ top: 0, left: '50%', width: '600px', height: '600px', transform: 'translate(-50%, -60%)', borderRadius: '50%', background: `radial-gradient(circle, ${t.glow3} 0%, transparent 70%)` }} />
+    <main
+      className="min-h-screen relative overflow-hidden"
+      style={{ background: bg.gradient, transition: 'background 2s ease' }}
+    >
+      {/* Subtle vignette overlay */}
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{ background: 'radial-gradient(ellipse at center, transparent 60%, rgba(0,0,0,0.15) 100%)' }}
+      />
 
-      <div className="relative z-10 max-w-2xl mx-auto px-6 py-10">
+      <div className="relative z-10 max-w-lg mx-auto px-5 py-8">
 
-        {/* Header */}
+        {/*
+          HEADER — Your Name style
+          Large time display, weather stamp, location
+          Feels like the journal app from the movie
+        */}
         <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
-          <h1 style={{
-            fontFamily: 'var(--font-lora)',
-            color: t.inputText,
-            fontSize: '26px',
-            fontWeight: '600',
-            letterSpacing: '-0.01em',
-            marginBottom: '0'
-          }}>
-            MyLife
-          </h1>
-        </div>
-
-        {/* Streak section */}
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '2.5rem', gap: '8px' }}>
+          {/* Time — large, editorial */}
           <p style={{
-            color: t.textFaint,
-            fontSize: '12px',
-            letterSpacing: '0.06em',
-            fontStyle: 'italic',
             fontFamily: 'var(--font-lora)',
+            color: bg.textColor,
+            fontSize: '13px',
+            letterSpacing: '0.15em',
+            textTransform: 'uppercase',
+            opacity: 0.7,
+            marginBottom: '4px',
           }}>
-            {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
+            {now.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
           </p>
 
-          {entries.length > 0 && (
+          {/* Large hour display */}
+          <p style={{
+            fontFamily: 'var(--font-lora)',
+            color: bg.textColor,
+            fontSize: '72px',
+            fontWeight: '300',
+            lineHeight: '1',
+            letterSpacing: '-0.04em',
+            marginBottom: '4px',
+            opacity: 0.9,
+          }}>
+            {now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}
+          </p>
+
+          {/* Weather + location stamp */}
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '12px',
+            marginBottom: '6px',
+          }}>
+            {weather ? (
+              <>
+                <span style={{
+                  fontSize: '12px',
+                  color: bg.textColor,
+                  opacity: 0.65,
+                  letterSpacing: '0.08em',
+                }}>
+                  {weather.condition.toUpperCase()} {weather.temp}°F
+                </span>
+                <span style={{ color: bg.textColor, opacity: 0.3, fontSize: '10px' }}>·</span>
+                <span style={{
+                  fontSize: '12px',
+                  color: bg.textColor,
+                  opacity: 0.65,
+                  letterSpacing: '0.06em',
+                }}>
+                  {cityName || weather.location}
+                </span>
+              </>
+            ) : (
+              <button
+                onClick={requestLocation}
+                style={{
+                  background: 'none', border: 'none', cursor: 'pointer',
+                  fontSize: '11px', color: bg.textColor,
+                  opacity: 0.5, letterSpacing: '0.08em',
+                  fontFamily: 'var(--font-lora)',
+                  textDecoration: 'underline',
+                }}
+              >
+                enable location for weather
+              </button>
+            )}
+          </div>
+
+          {/* MyLife label */}
+          <p style={{
+            fontSize: '11px',
+            color: bg.textColor,
+            opacity: 0.4,
+            letterSpacing: '0.2em',
+            textTransform: 'uppercase',
+            fontFamily: 'var(--font-lora)',
+          }}>
+            MyLife
+          </p>
+        </div>
+
+        {/* Streak strip */}
+        {entries.length > 0 && (
+          <div style={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: '8px',
+            marginBottom: '1.5rem',
+          }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
               {streak > 0 ? (
-                <p style={{ color: t.textMuted, fontSize: '12px', letterSpacing: '0.04em', fontFamily: 'var(--font-lora)' }}>
-                  {streak} day{streak === 1 ? '' : 's'} · best: {longestStreak}d
+                <p style={{
+                  fontSize: '12px', color: bg.textColor,
+                  opacity: 0.65, fontFamily: 'var(--font-lora)',
+                  letterSpacing: '0.04em',
+                }}>
+                  {streak}d streak · best {longestStreak}d
                 </p>
               ) : (
-                <p style={{ color: t.textDim, fontSize: '12px', fontStyle: 'italic', fontFamily: 'var(--font-lora)' }}>
-                  write tonight to start a streak
+                <p style={{
+                  fontSize: '12px', color: bg.textColor,
+                  opacity: 0.5, fontStyle: 'italic',
+                  fontFamily: 'var(--font-lora)',
+                }}>
+                  write today to start a streak
                 </p>
               )}
             </div>
-          )}
 
-          {/* Weekly dots */}
-          {entries.length > 0 && (
+            {/* Week dots */}
             <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
               {currentWeek.map((day, i) => (
-                <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '5px' }}>
+                <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
                   <div style={{
                     width: '7px', height: '7px', borderRadius: '50%',
-                    background: day.wrote ? t.accent : t.entryBorder,
-                    outline: day.isToday ? `1.5px solid ${t.accent}` : 'none',
+                    background: day.wrote ? bg.accentColor : 'rgba(255,255,255,0.25)',
+                    outline: day.isToday ? `1.5px solid ${bg.accentColor}` : 'none',
                     outlineOffset: '2px',
                     transition: 'all 0.2s ease',
-                    opacity: day.wrote ? 1 : 0.5,
                   }} />
                   <p style={{
                     fontSize: '9px',
-                    color: day.isToday ? t.accent : t.textDim,
-                    letterSpacing: '0.03em',
+                    color: bg.textColor,
+                    opacity: day.isToday ? 0.9 : 0.4,
+                    letterSpacing: '0.02em',
                   }}>
                     {day.dayLabel}
                   </p>
                 </div>
               ))}
             </div>
-          )}
 
-          {milestone && (
-            <p style={{
-              color: t.accent, fontSize: '11px',
-              fontFamily: 'var(--font-lora)', fontStyle: 'italic',
-              textAlign: 'center', animation: 'fadeIn 1s ease',
-              letterSpacing: '0.02em',
-            }}>
-              {milestone}
-            </p>
-          )}
-        </div>
+            {milestone && (
+              <p style={{
+                fontSize: '11px', color: bg.accentColor,
+                fontFamily: 'var(--font-lora)', fontStyle: 'italic',
+                textAlign: 'center',
+              }}>
+                {milestone}
+              </p>
+            )}
+          </div>
+        )}
 
-        {/*
-          WRITE AREA
-          Folded paper feel — low border radius, hairline border, warm shadow.
-          Placeholder text comes from t.prompt — unique per theme.
-          Mood pills are small dots with labels, not rounded pills.
-          Button says "save this day" — from the PDF design.
-        */}
+        {/* Write area — white card, clean */}
         <div style={{
-          background: t.cardBg,
-          border: `1px solid ${t.cardBorder}`,
-          borderRadius: '6px',
-          padding: '1.5rem',
-          marginBottom: '2rem',
-          boxShadow: `0 2px 12px ${t.shadow}`,
+          background: bg.cardBg,
+          border: `1px solid ${bg.cardBorder}`,
+          borderRadius: '12px',
+          padding: '1.25rem',
+          marginBottom: '1.5rem',
+          backdropFilter: 'blur(8px)',
+          boxShadow: '0 4px 24px rgba(0,0,0,0.08)',
         }}>
-          {/* Title input */}
           <input
             type="text"
             placeholder="Title (optional)"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             style={{
-              width: '100%',
-              background: 'transparent',
-              border: 'none',
-              borderBottom: `1px solid ${t.cardBorder}`,
-              color: t.inputText,
-              fontFamily: 'var(--font-lora)',
-              fontSize: '18px',
-              fontStyle: 'italic',
-              paddingBottom: '10px',
-              marginBottom: '14px',
-              outline: 'none',
-              boxSizing: 'border-box',
+              width: '100%', background: 'transparent',
+              border: 'none', borderBottom: `1px solid ${bg.cardBorder}`,
+              color: bg.secondaryText, fontFamily: 'var(--font-lora)',
+              fontSize: '17px', fontStyle: 'italic',
+              paddingBottom: '10px', marginBottom: '12px',
+              outline: 'none', boxSizing: 'border-box',
             }}
           />
-
-          {/* Body textarea — prompt from theme */}
           <textarea
-            placeholder={t.prompt}
+            placeholder={prompt}
             value={body}
             onChange={(e) => setBody(e.target.value)}
-            rows={7}
+            rows={6}
             style={{
-              width: '100%',
-              background: 'transparent',
-              border: 'none',
-              color: t.bodyText,
-              fontFamily: 'var(--font-lora)',
-              fontSize: '16px',
-              lineHeight: '2',
-              resize: 'none',
-              outline: 'none',
-              boxSizing: 'border-box',
+              width: '100%', background: 'transparent',
+              border: 'none', color: bg.secondaryText,
+              fontFamily: 'var(--font-lora)', fontSize: '15px',
+              lineHeight: '1.9', resize: 'none',
+              outline: 'none', boxSizing: 'border-box',
             }}
           />
 
           {/* Mood + save */}
           <div style={{
-            borderTop: `1px solid ${t.cardBorder}`,
-            marginTop: '1rem',
-            paddingTop: '1rem',
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
+            borderTop: `1px solid ${bg.cardBorder}`,
+            marginTop: '12px', paddingTop: '12px',
+            display: 'flex', justifyContent: 'space-between', alignItems: 'center',
           }}>
-            {/* Mood dots */}
-            <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
+            <div style={{ display: 'flex', gap: '14px', alignItems: 'center' }}>
               {moodOptions.map((m) => {
                 const isSelected = mood === m.value
                 return (
@@ -313,28 +403,18 @@ export default function Journal() {
                     key={m.value}
                     onClick={() => setMood(mood === m.value ? '' : m.value)}
                     style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '5px',
-                      background: 'none',
-                      border: 'none',
-                      cursor: 'pointer',
-                      padding: 0,
-                      transition: 'all 0.15s ease',
+                      display: 'flex', alignItems: 'center', gap: '4px',
+                      background: 'none', border: 'none', cursor: 'pointer', padding: 0,
                     }}
                   >
                     <div style={{
-                      width: '6px',
-                      height: '6px',
-                      borderRadius: '50%',
-                      background: isSelected ? t.accent : t.textDim,
-                      transition: 'background 0.15s ease',
-                      flexShrink: 0,
+                      width: '6px', height: '6px', borderRadius: '50%',
+                      background: isSelected ? bg.accentColor : bg.dimText,
+                      transition: 'background 0.15s ease', flexShrink: 0,
                     }} />
                     <span style={{
-                      fontSize: '12px',
-                      fontFamily: 'var(--font-lora)',
-                      color: isSelected ? t.accent : t.textFaint,
+                      fontSize: '11px', fontFamily: 'var(--font-lora)',
+                      color: isSelected ? bg.accentColor : bg.dimText,
                       transition: 'color 0.15s ease',
                     }}>
                       {m.label}
@@ -343,24 +423,21 @@ export default function Journal() {
                 )
               })}
             </div>
-
-            {/* Save button */}
             <button
               onClick={handleSaveEntry}
               disabled={saving}
               style={{
-                fontSize: '12px',
-                padding: '8px 20px',
-                borderRadius: '4px',
-                background: t.accent,
-                color: isSky ? '#ffffff' : t.bg,
-                border: 'none',
-                cursor: 'pointer',
+                fontSize: '12px', padding: '7px 18px',
+                borderRadius: '20px',
+                background: bg.accentColor,
+                color: '#ffffff',
+                border: 'none', cursor: 'pointer',
                 fontFamily: 'var(--font-lora)',
                 letterSpacing: '0.04em',
                 opacity: saving ? 0.7 : 1,
                 transition: 'opacity 0.2s ease',
                 whiteSpace: 'nowrap',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
               }}
             >
               {saving ? 'saving...' : 'save this day'}
@@ -368,108 +445,131 @@ export default function Journal() {
           </div>
         </div>
 
-        {/* Previous entries label */}
+        {/* Entry list — Your Name style */}
         <p style={{
-          fontSize: '10px',
-          color: t.textDim,
-          textTransform: 'uppercase',
-          letterSpacing: '0.12em',
-          marginBottom: '1rem',
+          fontSize: '10px', color: bg.textColor, opacity: 0.45,
+          textTransform: 'uppercase', letterSpacing: '0.15em',
+          marginBottom: '8px', fontFamily: 'var(--font-lora)',
         }}>
-          Previous entries
+          Entries
         </p>
 
         {entries.length === 0 ? (
           <p style={{
-            color: t.textFaint, textAlign: 'center', marginTop: '4rem',
-            fontFamily: 'var(--font-lora)', fontStyle: 'italic', fontSize: '15px'
+            color: bg.textColor, opacity: 0.4,
+            textAlign: 'center', marginTop: '3rem',
+            fontFamily: 'var(--font-lora)', fontStyle: 'italic', fontSize: '14px',
           }}>
             Nothing yet. The page is waiting.
           </p>
         ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1px' }}>
-            {entries.map((entry, index) => (
-              <Link
-                key={entry.id}
-                href={`/journal/${entry.id}`}
-                style={{
-                  display: 'block',
-                  padding: '14px 16px',
-                  background: t.entryBg,
-                  borderTop: index === 0 ? `1px solid ${t.entryBorder}` : 'none',
-                  borderBottom: `1px solid ${t.entryBorder}`,
-                  borderLeft: `1px solid ${t.entryBorder}`,
-                  borderRight: `1px solid ${t.entryBorder}`,
-                  borderRadius: index === 0 ? '4px 4px 0 0' : index === entries.length - 1 ? '0 0 4px 4px' : '0',
-                  cursor: 'pointer',
-                  textDecoration: 'none',
-                  transition: 'background 0.15s ease',
-                }}
-                onMouseEnter={(e) => e.currentTarget.style.background = t.cardBg}
-                onMouseLeave={(e) => e.currentTarget.style.background = t.entryBg}
-              >
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px' }}>
-                  <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0' }}>
+            {entries.map((entry, index) => {
+              const entryDate = new Date(entry.created_at)
+              const dayNum = entryDate.getDate()
+              const dayAbbr = entryDate.toLocaleDateString('en-US', { weekday: 'short' })
+              const entryTime = entryDate.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
+
+              return (
+                <Link
+                  key={entry.id}
+                  href={`/journal/${entry.id}`}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0',
+                    background: bg.cardBg,
+                    borderTop: index === 0 ? `1px solid ${bg.cardBorder}` : 'none',
+                    borderBottom: `1px solid ${bg.cardBorder}`,
+                    borderLeft: `1px solid ${bg.cardBorder}`,
+                    borderRight: `1px solid ${bg.cardBorder}`,
+                    borderRadius: index === 0 ? '12px 12px 0 0' : index === entries.length - 1 ? '0 0 12px 12px' : '0',
+                    textDecoration: 'none',
+                    backdropFilter: 'blur(8px)',
+                    transition: 'opacity 0.15s ease',
+                    overflow: 'hidden',
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.opacity = '0.85'}
+                  onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}
+                >
+                  {/* Large day number — Your Name style */}
+                  <div style={{
+                    width: '64px',
+                    flexShrink: 0,
+                    padding: '14px 0 14px 16px',
+                    borderRight: `1px solid ${bg.cardBorder}`,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}>
+                    <p style={{
+                      fontFamily: 'var(--font-lora)',
+                      color: bg.accentColor,
+                      fontSize: '32px',
+                      fontWeight: '300',
+                      lineHeight: '1',
+                      letterSpacing: '-0.02em',
+                    }}>
+                      {dayNum}
+                    </p>
+                    <p style={{
+                      fontSize: '10px',
+                      color: bg.dimText,
+                      letterSpacing: '0.05em',
+                      marginTop: '2px',
+                    }}>
+                      {dayAbbr.toUpperCase()}
+                    </p>
+                  </div>
+
+                  {/* Entry content */}
+                  <div style={{ flex: 1, padding: '14px 14px 14px 14px', minWidth: 0 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '4px' }}>
+                      <p style={{
+                        fontSize: '11px', color: bg.dimText,
+                        letterSpacing: '0.04em',
+                      }}>
+                        {entryTime}
+                        {entry.weather && ` · ${entry.weather}`}
+                      </p>
+                      {entry.mood && (
+                        <p style={{ fontSize: '11px', color: bg.dimText }}>
+                          {entry.mood.split(' ').slice(1).join(' ')}
+                        </p>
+                      )}
+                    </div>
                     {entry.title ? (
-                      <>
-                        <p style={{
-                          fontFamily: 'var(--font-lora)',
-                          color: t.inputText,
-                          fontSize: '15px',
-                          fontWeight: '500',
-                          marginBottom: '3px',
-                          overflow: 'hidden',
-                          textOverflow: 'ellipsis',
-                          whiteSpace: 'nowrap',
-                        }}>
-                          {entry.title}
-                        </p>
-                        <p style={{
-                          fontFamily: 'var(--font-lora)',
-                          color: t.entryBodyText,
-                          fontSize: '13px',
-                          lineHeight: '1.5',
-                          overflow: 'hidden',
-                          display: '-webkit-box',
-                          WebkitLineClamp: 1,
-                          WebkitBoxOrient: 'vertical' as const,
-                        }}>
-                          {entry.body}
-                        </p>
-                      </>
+                      <p style={{
+                        fontFamily: 'var(--font-lora)',
+                        color: bg.secondaryText,
+                        fontSize: '14px',
+                        fontWeight: '500',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap',
+                      }}>
+                        {entry.title}
+                      </p>
                     ) : (
                       <p style={{
                         fontFamily: 'var(--font-lora)',
-                        color: t.bodyText,
-                        fontSize: '14px',
-                        lineHeight: '1.6',
+                        color: bg.secondaryText,
+                        fontSize: '13px',
+                        lineHeight: '1.5',
                         overflow: 'hidden',
                         display: '-webkit-box',
                         WebkitLineClamp: 2,
                         WebkitBoxOrient: 'vertical' as const,
+                        opacity: 0.8,
                       }}>
                         {entry.body}
                       </p>
                     )}
                   </div>
-                  <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                    <p style={{
-                      fontSize: '11px',
-                      color: t.textDim,
-                      letterSpacing: '0.03em',
-                      marginBottom: '3px',
-                    }}>
-                      {new Date(entry.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                    </p>
-                    {entry.mood && (
-                      <p style={{ fontSize: '12px', color: t.textFaint, fontFamily: 'var(--font-lora)' }}>
-                        {entry.mood.split(' ').slice(1).join(' ')}
-                      </p>
-                    )}
-                  </div>
-                </div>
-              </Link>
-            ))}
+                </Link>
+              )
+            })}
           </div>
         )}
       </div>

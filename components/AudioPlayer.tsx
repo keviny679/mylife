@@ -2,11 +2,11 @@
 
 import { useState } from 'react'
 import { useAudio } from '@/lib/audio-context'
-import { useTheme } from '@/lib/theme-context'
+import { useAtmosphere } from '@/lib/atmosphere'
 
 export default function AudioPlayer() {
   const { isPlaying, currentTrack, togglePlay, skipNext, skipPrev, toggleShuffle, isShuffled } = useAudio()
-  const { t } = useTheme()
+  const { t } = useAtmosphere()
   const [expanded, setExpanded] = useState(false)
 
   return (
@@ -93,7 +93,7 @@ export default function AudioPlayer() {
                 height: '34px',
                 cursor: 'pointer',
                 fontSize: '12px',
-                color: t.bg,
+                color: '#ffffff',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',

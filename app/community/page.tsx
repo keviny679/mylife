@@ -2,14 +2,14 @@
 
 import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
-import { useTheme } from '@/lib/theme-context'
+import { useAtmosphere } from '@/lib/atmosphere'
 
 export default function Community() {
   const [entries, setEntries] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [isAdmin, setIsAdmin] = useState(false)
   const [selectedEntry, setSelectedEntry] = useState<any>(null)
-  const { t } = useTheme()
+  const { background: bg, t } = useAtmosphere()
 
   useEffect(() => {
     async function load() {
@@ -44,14 +44,14 @@ export default function Community() {
 
   if (loading) {
     return (
-      <main className="min-h-screen flex items-center justify-center" style={{ background: t.bg }}>
-        <p style={{ color: t.textFaint, fontFamily: 'var(--font-lora)', fontStyle: 'italic' }}>Loading...</p>
+      <main className="min-h-screen flex items-center justify-center" style={{ background: bg.gradient }}>
+        <p style={{ color: bg.textColor, fontFamily: 'var(--font-lora)', fontStyle: 'italic', opacity: 0.7 }}>Loading...</p>
       </main>
     )
   }
 
   return (
-    <main className="min-h-screen relative overflow-hidden" style={{ background: t.bg }}>
+    <main className="min-h-screen relative overflow-hidden" style={{ background: bg.gradient, transition: 'background 2s ease' }}>
       <div className="absolute bottom-0 left-0 w-96 h-96 rounded-full pointer-events-none" style={{ background: `radial-gradient(circle, ${t.glow1} 0%, transparent 70%)` }} />
       <div className="absolute top-0 right-0 w-72 h-72 rounded-full pointer-events-none" style={{ background: `radial-gradient(circle, ${t.glow2} 0%, transparent 70%)` }} />
       <div className="absolute pointer-events-none" style={{ top: 0, left: '50%', width: '600px', height: '600px', transform: 'translate(-50%, -60%)', borderRadius: '50%', background: `radial-gradient(circle, ${t.glow3} 0%, transparent 70%)` }} />
@@ -62,7 +62,7 @@ export default function Community() {
         <div style={{ marginBottom: '2.5rem' }}>
           <h1 style={{
             fontFamily: 'var(--font-lora)',
-            color: t.inputText,
+            color: bg.textColor,
             fontSize: '32px',
             fontWeight: '600',
             letterSpacing: '-0.01em',
@@ -71,7 +71,7 @@ export default function Community() {
             This Week
           </h1>
           <p style={{
-            color: t.textFaint,
+            color: bg.textColor,
             fontSize: '13px',
             fontFamily: 'var(--font-lora)',
             fontStyle: 'italic',
@@ -85,14 +85,14 @@ export default function Community() {
           <div style={{ marginTop: '6rem' }}>
             <p style={{
               fontFamily: 'var(--font-lora)',
-              color: t.textFaint,
+              color: bg.textColor,
               fontSize: '17px',
               fontStyle: 'italic',
               marginBottom: '6px',
             }}>
               Nothing shared this week yet.
             </p>
-            <p style={{ color: t.textDim, fontSize: '13px', fontFamily: 'var(--font-lora)' }}>
+            <p style={{ color: bg.textColor, opacity: 0.6, fontSize: '13px', fontFamily: 'var(--font-lora)' }}>
               Be the first to share an entry.
             </p>
           </div>
@@ -208,7 +208,7 @@ export default function Community() {
         {/* Footer note */}
         <p style={{
           fontFamily: 'var(--font-lora)',
-          color: t.textDim,
+          color: bg.textColor,
           fontSize: '12px',
           fontStyle: 'italic',
           marginTop: '3rem',
@@ -222,7 +222,7 @@ export default function Community() {
       {selectedEntry && (
         <div style={{
           position: 'fixed', inset: 0, zIndex: 80,
-          background: t.bg, overflowY: 'auto',
+          background: bg.gradient, overflowY: 'auto',
           animation: 'pageIn 0.35s cubic-bezier(0.16, 1, 0.3, 1)',
         }}>
           <div style={{

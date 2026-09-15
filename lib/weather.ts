@@ -42,24 +42,13 @@ export function getTimeOfDay(): TimeOfDay {
   return { period: 'midnight', hour, label: 'Midnight' }
 }
 
-// Fetch weather from WeatherAPI.com
+// Fetch weather through our server route so the provider key stays off the client.
 export async function fetchWeather(lat: number, lon: number): Promise<WeatherData | null> {
   try {
-    const key = process.env.NEXT_PUBLIC_WEATHER_API_KEY
-    const res = await fetch(
-      `https://api.weatherapi.com/v1/current.json?key=${key}&q=${lat},${lon}&aqi=no`
-    )
+    const params = new URLSearchParams({ lat: String(lat), lon: String(lon) })
+    const res = await fetch(`/api/weather?${params.toString()}`)
     if (!res.ok) return null
-    const data = await res.json()
-
-    return {
-      temp: Math.round(data.current.temp_f),
-      condition: data.current.condition.text,
-      conditionCode: data.current.condition.code,
-      icon: data.current.condition.icon,
-      isDay: data.current.is_day === 1,
-      location: `${data.location.name}, ${data.location.region}`,
-    }
+    return await res.json() as WeatherData
   } catch {
     return null
   }

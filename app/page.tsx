@@ -4,11 +4,11 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
-import { useTheme } from '@/lib/theme-context'
+import { useAtmosphere } from '@/lib/atmosphere'
 
 export default function Home() {
   const router = useRouter()
-  const { t } = useTheme()
+  const { background: bg, t } = useAtmosphere()
   const [checking, setChecking] = useState(true)
 
   useEffect(() => {
@@ -24,11 +24,11 @@ export default function Home() {
   }, [])
 
   if (checking) {
-    return <main className="min-h-screen" style={{ background: t.bg }} />
+    return <main className="min-h-screen" style={{ background: bg.gradient }} />
   }
 
   return (
-    <main className="min-h-screen relative overflow-hidden flex flex-col items-center justify-center" style={{ background: t.bg }}>
+    <main className="min-h-screen relative overflow-hidden flex flex-col items-center justify-center" style={{ background: bg.gradient, transition: 'background 2s ease' }}>
       <div className="absolute bottom-0 left-0 w-96 h-96 rounded-full pointer-events-none" style={{ background: `radial-gradient(circle, ${t.glow1} 0%, transparent 70%)` }} />
       <div className="absolute top-0 right-0 w-72 h-72 rounded-full pointer-events-none" style={{ background: `radial-gradient(circle, ${t.glow2} 0%, transparent 70%)` }} />
       <div className="absolute pointer-events-none" style={{ top: 0, left: '50%', width: '600px', height: '600px', transform: 'translate(-50%, -60%)', borderRadius: '50%', background: `radial-gradient(circle, ${t.glow3} 0%, transparent 70%)` }} />
@@ -38,7 +38,7 @@ export default function Home() {
         {/* Logo */}
         <h1 style={{
           fontFamily: 'var(--font-lora)',
-          color: t.inputText,
+          color: bg.textColor,
           fontSize: '48px',
           fontWeight: '600',
           letterSpacing: '-0.02em',
@@ -51,7 +51,7 @@ export default function Home() {
         {/* Tagline */}
         <p style={{
           fontFamily: 'var(--font-lora)',
-          color: t.textFaint,
+          color: bg.textColor,
           fontSize: '16px',
           fontStyle: 'italic',
           marginBottom: '6px',
@@ -60,7 +60,7 @@ export default function Home() {
           A private record of your days.
         </p>
         <p style={{
-          color: t.textDim,
+          color: bg.textColor,
           fontSize: '13px',
           marginBottom: '52px',
           letterSpacing: '0.02em',
@@ -78,7 +78,7 @@ export default function Home() {
               padding: '12px',
               borderRadius: '4px',
               background: t.accent,
-              color: t.bg,
+              color: '#ffffff',
               fontSize: '13px',
               fontFamily: 'var(--font-lora)',
               textAlign: 'center',
@@ -99,7 +99,7 @@ export default function Home() {
               padding: '12px',
               borderRadius: '4px',
               background: 'transparent',
-              color: t.textMuted,
+              color: bg.textColor,
               fontSize: '13px',
               fontFamily: 'var(--font-lora)',
               textAlign: 'center',
@@ -109,11 +109,11 @@ export default function Home() {
               transition: 'color 0.15s ease, border-color 0.15s ease',
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.color = t.inputText
+              e.currentTarget.style.color = bg.textColor
               e.currentTarget.style.borderColor = t.textDim
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.color = t.textMuted
+              e.currentTarget.style.color = bg.textColor
               e.currentTarget.style.borderColor = t.cardBorder
             }}
           >
@@ -132,16 +132,16 @@ export default function Home() {
         }}>
           {[
             'ambient sounds',
-            'six atmospheres',
+            'weather + time',
             'mood tracking',
-            'streak counter',
-            'community feed',
+            'private memories',
+            'anonymous letters',
           ].map((feature) => (
             <span
               key={feature}
               style={{
                 fontSize: '11px',
-                color: t.textDim,
+                color: bg.textColor,
                 letterSpacing: '0.08em',
                 textTransform: 'uppercase',
                 fontFamily: 'var(--font-lora)',

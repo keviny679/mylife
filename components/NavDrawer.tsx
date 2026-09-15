@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { useTheme, modeOptions, Mode } from '@/lib/theme-context'
+import { useAtmosphere } from '@/lib/atmosphere'
 import { supabase } from '@/lib/supabase'
 
 const navItems = [
@@ -13,20 +13,10 @@ const navItems = [
   { label: 'Profile', href: '/profile' },
 ]
 
-const dotColors: Record<string, string> = {
-  arcadia: '#36BBD9',
-  rain: '#86A6B4',
-  firelight: '#D68A4F',
-  dawn: '#D6A08C',
-  dusk: '#B083A0',
-  midnight: '#7C89B0',
-  sky: '#5B8DB8',
-}
-
 export default function NavDrawer() {
   const [open, setOpen] = useState(false)
   const [authed, setAuthed] = useState(false)
-  const { t, mode, setMode } = useTheme()
+  const { background: bg, t } = useAtmosphere()
   const pathname = usePathname()
   const router = useRouter()
 
@@ -61,9 +51,9 @@ export default function NavDrawer() {
           flexDirection: 'column', gap: '5px', padding: '4px',
         }}
       >
-        <span style={{ display: 'block', width: '20px', height: '1px', background: t.textMuted }} />
-        <span style={{ display: 'block', width: '14px', height: '1px', background: t.textMuted }} />
-        <span style={{ display: 'block', width: '20px', height: '1px', background: t.textMuted }} />
+        <span style={{ display: 'block', width: '20px', height: '1px', background: bg.textColor }} />
+        <span style={{ display: 'block', width: '14px', height: '1px', background: bg.textColor }} />
+        <span style={{ display: 'block', width: '20px', height: '1px', background: bg.textColor }} />
       </button>
 
       {/* Backdrop */}
@@ -149,51 +139,24 @@ export default function NavDrawer() {
           })}
         </nav>
 
-        {/* Atmosphere picker */}
-        <div style={{ marginBottom: '2rem' }}>
+        <div style={{
+          marginBottom: '2rem', padding: '12px 10px',
+          borderTop: `1px solid ${t.cardBorder}`,
+          borderBottom: `1px solid ${t.cardBorder}`,
+        }}>
           <p style={{
             fontSize: '10px', color: t.textDim,
             letterSpacing: '0.12em', textTransform: 'uppercase',
-            marginBottom: '12px', paddingLeft: '2px'
+            marginBottom: '4px',
           }}>
-            Atmosphere
+            Current atmosphere
           </p>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-            {modeOptions.map((option) => {
-              const isActive = mode === option.mode
-              return (
-                <button
-                  key={option.mode}
-                  onClick={() => { setMode(option.mode as Mode); setOpen(false) }}
-                  style={{
-                    display: 'flex', alignItems: 'center', gap: '10px',
-                    padding: '7px 10px', borderRadius: '4px',
-                    background: 'transparent', border: 'none',
-                    cursor: 'pointer', textAlign: 'left',
-                    transition: 'all 0.15s ease',
-                  }}
-                >
-                  <div style={{
-                    width: '7px', height: '7px', borderRadius: '50%',
-                    background: dotColors[option.mode],
-                    flexShrink: 0,
-                    outline: isActive ? `2px solid ${dotColors[option.mode]}` : '2px solid transparent',
-                    outlineOffset: '2px',
-                    opacity: isActive ? 1 : 0.45,
-                    transition: 'all 0.15s ease',
-                  }} />
-                  <span style={{
-                    fontSize: '13px',
-                    fontFamily: 'var(--font-lora)',
-                    color: isActive ? t.inputText : t.textFaint,
-                    transition: 'color 0.15s ease',
-                  }}>
-                    {option.label}
-                  </span>
-                </button>
-              )
-            })}
-          </div>
+          <p style={{
+            fontSize: '13px', color: t.inputText,
+            fontFamily: 'var(--font-lora)', fontStyle: 'italic',
+          }}>
+            shaped by your time and weather
+          </p>
         </div>
 
         {/* Bottom — Ko-fi + sign out */}

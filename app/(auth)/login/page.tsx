@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
-import { useTheme } from '@/lib/theme-context'
+import { useAtmosphere } from '@/lib/atmosphere'
 
 export default function Login() {
   const [email, setEmail] = useState('')
@@ -12,7 +12,7 @@ export default function Login() {
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState('')
   const router = useRouter()
-  const { t } = useTheme()
+  const { background: bg, t } = useAtmosphere()
 
   async function handleLogin() {
     setLoading(true)
@@ -26,7 +26,7 @@ export default function Login() {
   }
 
   return (
-    <main className="min-h-screen relative overflow-hidden flex items-center justify-center" style={{ background: t.bg }}>
+    <main className="min-h-screen relative overflow-hidden flex items-center justify-center" style={{ background: bg.gradient, transition: 'background 2s ease' }}>
       <div className="absolute bottom-0 left-0 w-96 h-96 rounded-full pointer-events-none" style={{ background: `radial-gradient(circle, ${t.glow1} 0%, transparent 70%)` }} />
       <div className="absolute top-0 right-0 w-72 h-72 rounded-full pointer-events-none" style={{ background: `radial-gradient(circle, ${t.glow2} 0%, transparent 70%)` }} />
       <div className="absolute pointer-events-none" style={{ top: 0, left: '50%', width: '600px', height: '600px', transform: 'translate(-50%, -60%)', borderRadius: '50%', background: `radial-gradient(circle, ${t.glow3} 0%, transparent 70%)` }} />
@@ -37,7 +37,7 @@ export default function Login() {
         <div style={{ textAlign: 'center', marginBottom: '2.5rem' }}>
           <h1 style={{
             fontFamily: 'var(--font-lora)',
-            color: t.inputText,
+            color: bg.textColor,
             fontSize: '28px',
             fontWeight: '600',
             letterSpacing: '-0.01em',
@@ -46,7 +46,8 @@ export default function Login() {
             MyLife
           </h1>
           <p style={{
-            color: t.textFaint,
+            color: bg.textColor,
+            opacity: 0.7,
             fontSize: '13px',
             fontFamily: 'var(--font-lora)',
             fontStyle: 'italic',
@@ -118,7 +119,7 @@ export default function Login() {
               padding: '11px',
               borderRadius: '3px',
               background: t.accent,
-              color: t.bg,
+              color: '#ffffff',
               border: 'none',
               cursor: 'pointer',
               fontSize: '13px',
@@ -146,19 +147,20 @@ export default function Login() {
         </div>
 
         <p style={{
-          color: t.textDim,
+          color: bg.textColor,
+          opacity: 0.75,
           fontSize: '12px',
           textAlign: 'center',
           fontFamily: 'var(--font-lora)',
         }}>
           no account?{' '}
           <Link href="/signup" style={{
-            color: t.textMuted,
+            color: bg.textColor,
             textDecoration: 'none',
             transition: 'color 0.15s ease',
           }}
             onMouseEnter={(e) => e.currentTarget.style.color = t.accent}
-            onMouseLeave={(e) => e.currentTarget.style.color = t.textMuted}
+            onMouseLeave={(e) => e.currentTarget.style.color = bg.textColor}
           >
             start writing
           </Link>

@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
-import { useTheme } from '@/lib/theme-context'
+import { useAtmosphere } from '@/lib/atmosphere'
 
 function calculateStreak(entries: any[]): number {
   if (entries.length === 0) return 0
@@ -47,7 +47,7 @@ export default function Profile() {
   const [newName, setNewName] = useState('')
   const [saving, setSaving] = useState(false)
   const router = useRouter()
-  const { t } = useTheme()
+  const { background: bg, t } = useAtmosphere()
 
   useEffect(() => {
     async function load() {
@@ -104,14 +104,14 @@ export default function Profile() {
 
   if (loading) {
     return (
-      <main className="min-h-screen flex items-center justify-center" style={{ background: t.bg }}>
-        <p style={{ color: t.textFaint, fontFamily: 'var(--font-lora)', fontStyle: 'italic' }}>Loading...</p>
+      <main className="min-h-screen flex items-center justify-center" style={{ background: bg.gradient }}>
+        <p style={{ color: bg.textColor, fontFamily: 'var(--font-lora)', fontStyle: 'italic', opacity: 0.7 }}>Loading...</p>
       </main>
     )
   }
 
   return (
-    <main className="min-h-screen relative overflow-hidden" style={{ background: t.bg }}>
+    <main className="min-h-screen relative overflow-hidden" style={{ background: bg.gradient, transition: 'background 2s ease' }}>
       <div className="absolute bottom-0 left-0 w-96 h-96 rounded-full pointer-events-none" style={{ background: `radial-gradient(circle, ${t.glow1} 0%, transparent 70%)` }} />
       <div className="absolute top-0 right-0 w-72 h-72 rounded-full pointer-events-none" style={{ background: `radial-gradient(circle, ${t.glow2} 0%, transparent 70%)` }} />
       <div className="absolute pointer-events-none" style={{ top: 0, left: '50%', width: '600px', height: '600px', transform: 'translate(-50%, -60%)', borderRadius: '50%', background: `radial-gradient(circle, ${t.glow3} 0%, transparent 70%)` }} />
@@ -130,7 +130,7 @@ export default function Profile() {
                 style={{
                   background: 'transparent', border: 'none',
                   borderBottom: `1px solid ${t.cardBorder}`,
-                  color: t.inputText, fontFamily: 'var(--font-lora)',
+                  color: bg.textColor, fontFamily: 'var(--font-lora)',
                   fontSize: '28px', fontWeight: '600',
                   letterSpacing: '-0.01em',
                   outline: 'none', padding: '0 0 4px',
@@ -141,7 +141,7 @@ export default function Profile() {
                 onClick={handleSaveName}
                 disabled={saving}
                 style={{
-                  background: t.accent, color: t.bg, border: 'none',
+                  background: t.accent, color: '#ffffff', border: 'none',
                   borderRadius: '3px', padding: '5px 12px',
                   cursor: 'pointer', fontSize: '11px',
                   fontFamily: 'var(--font-lora)', letterSpacing: '0.04em',
@@ -152,7 +152,7 @@ export default function Profile() {
               <button
                 onClick={() => { setEditing(false); setNewName(profile?.display_name || '') }}
                 style={{
-                  background: 'none', color: t.textDim, border: 'none',
+                  background: 'none', color: bg.textColor, border: 'none',
                   cursor: 'pointer', fontSize: '11px', fontFamily: 'var(--font-lora)',
                 }}
               >
@@ -163,7 +163,7 @@ export default function Profile() {
             <div style={{ display: 'flex', alignItems: 'baseline', gap: '10px', marginBottom: '6px' }}>
               <h1 style={{
                 fontFamily: 'var(--font-lora)',
-                color: t.inputText,
+                color: bg.textColor,
                 fontSize: '28px',
                 fontWeight: '600',
                 letterSpacing: '-0.01em',
@@ -174,18 +174,18 @@ export default function Profile() {
                 onClick={() => setEditing(true)}
                 style={{
                   background: 'none', border: 'none', cursor: 'pointer',
-                  color: t.textDim, fontSize: '13px',
+                  color: bg.textColor, fontSize: '13px',
                   transition: 'color 0.15s ease', padding: 0,
                 }}
                 onMouseEnter={(e) => e.currentTarget.style.color = t.accent}
-                onMouseLeave={(e) => e.currentTarget.style.color = t.textDim}
+                onMouseLeave={(e) => e.currentTarget.style.color = bg.textColor}
               >
                 ✎
               </button>
             </div>
           )}
           <p style={{
-            color: t.textFaint, fontSize: '12px',
+            color: bg.textColor, opacity: 0.7, fontSize: '12px',
             fontFamily: 'var(--font-lora)', fontStyle: 'italic',
           }}>
             {profile?.email} · member since {memberSince}
@@ -195,8 +195,10 @@ export default function Profile() {
         {/* Stats — same borderline style as memories */}
         <div style={{
           display: 'flex',
-          borderTop: `1px solid ${t.cardBorder}`,
-          borderBottom: `1px solid ${t.cardBorder}`,
+          background: t.cardBg,
+          border: `1px solid ${t.cardBorder}`,
+          borderRadius: '5px',
+          boxShadow: `0 2px 12px ${t.shadow}`,
           marginBottom: '2rem',
         }}>
           {[
@@ -232,7 +234,7 @@ export default function Profile() {
         {entries.length > 0 && (
           <div style={{ marginBottom: '1.5rem' }}>
             <p style={{
-              fontSize: '10px', color: t.textDim,
+              fontSize: '10px', color: bg.textColor, opacity: 0.65,
               letterSpacing: '0.12em', textTransform: 'uppercase',
               marginBottom: '1rem',
             }}>
@@ -285,7 +287,7 @@ export default function Profile() {
         {longestEntry && (
           <div style={{ marginBottom: '1.5rem' }}>
             <p style={{
-              fontSize: '10px', color: t.textDim,
+              fontSize: '10px', color: bg.textColor, opacity: 0.65,
               letterSpacing: '0.12em', textTransform: 'uppercase',
               marginBottom: '1rem',
             }}>
@@ -347,7 +349,8 @@ export default function Profile() {
         {entries.length === 0 && (
           <p style={{
             fontFamily: 'var(--font-lora)',
-            color: t.textFaint,
+            color: bg.textColor,
+            opacity: 0.7,
             fontSize: '15px',
             fontStyle: 'italic',
             textAlign: 'center',

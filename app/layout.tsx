@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { Lora } from "next/font/google";
 import "./globals.css";
-import { ThemeProvider } from "@/lib/theme-context";
 import { AudioProvider } from "@/lib/audio-context";
 import { WeatherProvider } from "@/lib/weather-context";
 import AudioPlayer from "@/components/AudioPlayer";
@@ -26,15 +25,13 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${lora.variable} h-full`}>
       <body className="min-h-full flex flex-col">
-        <ThemeProvider>
-          <WeatherProvider>
+        <WeatherProvider>
             <AudioProvider>
               <NavDrawer />
               {children}
               <AudioPlayer />
             </AudioProvider>
-          </WeatherProvider>
-        </ThemeProvider>
+        </WeatherProvider>
         <Analytics />
       </body>
     </html>

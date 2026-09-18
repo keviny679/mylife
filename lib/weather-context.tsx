@@ -129,39 +129,46 @@ export function WeatherProvider({ children }: { children: ReactNode }) {
 
   async function requestLocation() {
     setLocationStatus('loading')
-    setLocationMessage('Finding your location…')
+    let loc = location
 
-    const result = await getUserLocation()
-    if (!result.ok) {
-      if (result.reason === 'denied') {
-        setLocationStatus('denied')
-        setLocationMessage('Location is blocked. Allow it in your browser settings to add local weather.')
-      } else if (result.reason === 'timeout') {
-        setLocationStatus('unavailable')
-        setLocationMessage('Location took too long. Tap to try again.')
-      } else if (result.reason === 'unsupported') {
-        setLocationStatus('unavailable')
-        setLocationMessage('This browser does not support location.')
-      } else {
-        setLocationStatus('unavailable')
-        setLocationMessage('Your location could not be found. Tap to try again.')
+    // A weather retry should reuse coordinates we already have. Only invoke
+    // the browser permission flow when location has not been collected yet.
+    if (!loc) {
+      setLocationMessage('Finding your location…')
+      const result = await getUserLocation()
+      if (!result.ok) {
+        if (result.reason === 'denied') {
+          setLocationStatus('denied')
+          setLocationMessage('Location is blocked. Allow it in your browser settings to add local weather.')
+        } else if (result.reason === 'timeout') {
+          setLocationStatus('unavailable')
+          setLocationMessage('Location took too long. Tap to try again.')
+        } else if (result.reason === 'unsupported') {
+          setLocationStatus('unavailable')
+          setLocationMessage('This browser does not support location.')
+        } else {
+          setLocationStatus('unavailable')
+          setLocationMessage('Your location could not be found. Tap to try again.')
+        }
+        return
       }
-      return
-    }
 
-    const loc = result.location
-    setLocation(loc)
+      loc = result.location
+      setLocation(loc)
 
-    // Reverse geocode for accurate city name
-    const city = await reverseGeocode(loc.lat, loc.lon)
-    setCityName(city)
+      // Reverse geocode for accurate city name
+      const city = await reverseGeocode(loc.lat, loc.lon)
+      setCityName(city)
 
-    // Save to profile
-    const { data: { user } } = await supabase.auth.getUser()
-    if (user) {
-      await supabase.from('profiles')
-        .update({ latitude: loc.lat, longitude: loc.lon })
-        .eq('id', user.id)
+      // Save newly granted coordinates to the profile.
+      const { data: { user } } = await supabase.auth.getUser()
+      if (user) {
+        await supabase.from('profiles')
+          .update({ latitude: loc.lat, longitude: loc.lon })
+          .eq('id', user.id)
+      }
+    } else {
+      setLocationMessage('Refreshing local weather…')
     }
 
     // Fetch weather

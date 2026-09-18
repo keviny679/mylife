@@ -52,7 +52,7 @@ export function getTimeOfDay(): TimeOfDay {
 export async function fetchWeather(lat: number, lon: number): Promise<WeatherData | null> {
   try {
     const params = new URLSearchParams({ lat: String(lat), lon: String(lon) })
-    const res = await fetch(`/api/weather?${params.toString()}`)
+    const res = await fetch(`/api/weather?${params.toString()}`, { cache: 'no-store' })
     if (!res.ok) return null
     return await res.json() as WeatherData
   } catch {

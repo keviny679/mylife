@@ -135,7 +135,9 @@ export default function EntryDetail({ params }: { params: Promise<{ id: string }
   const monthName = entryDate.toLocaleDateString('en-US', { month: 'long' })
   const dayName = entryDate.toLocaleDateString('en-US', { weekday: 'long' })
   const yearNum = entryDate.getFullYear()
-  const entryTime = entryDate.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
+  const entryTime = entry.local_time
+    ? new Date(`2000-01-01T${entry.local_time}`).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
+    : entryDate.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
 
   return (
     <main
@@ -219,7 +221,7 @@ export default function EntryDetail({ params }: { params: Promise<{ id: string }
                 {dayName}, {entryTime}
               </p>
               {/* Weather stamp from when entry was written */}
-              {entry.weather && (
+              {(entry.weather || entry.location_name) && (
                 <p style={{
                   fontSize: '11px',
                   color: bg.dimText,
@@ -227,7 +229,7 @@ export default function EntryDetail({ params }: { params: Promise<{ id: string }
                   textTransform: 'uppercase',
                   fontFamily: 'var(--font-lora)',
                 }}>
-                  {entry.weather}
+                  {[entry.weather, entry.location_name].filter(Boolean).join(' · ')}
                 </p>
               )}
               {entry.mood && (

@@ -1,10 +1,11 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import type { FormEvent } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
-import { useAtmosphere } from '@/lib/atmosphere'
+import AuthShell, { AuthField, AuthSubmit } from '@/components/AuthShell'
 
 export default function Login() {
   const [email, setEmail] = useState('')
@@ -12,11 +13,13 @@ export default function Login() {
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState('')
   const router = useRouter()
-  const { background: bg, t } = useAtmosphere()
 
-  async function handleLogin() {
+  async function handleLogin(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
     setLoading(true)
-    const { error } = await supabase.auth.signInWithPassword({ email, password })
+    setMessage('')
+
+    const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password })
     if (error) {
       setMessage(error.message)
     } else {
@@ -26,146 +29,41 @@ export default function Login() {
   }
 
   return (
-    <main className="min-h-screen relative overflow-hidden flex items-center justify-center" style={{ background: bg.gradient, transition: 'background 2s ease' }}>
-      <div className="absolute bottom-0 left-0 w-96 h-96 rounded-full pointer-events-none" style={{ background: `radial-gradient(circle, ${t.glow1} 0%, transparent 70%)` }} />
-      <div className="absolute top-0 right-0 w-72 h-72 rounded-full pointer-events-none" style={{ background: `radial-gradient(circle, ${t.glow2} 0%, transparent 70%)` }} />
-      <div className="absolute pointer-events-none" style={{ top: 0, left: '50%', width: '600px', height: '600px', transform: 'translate(-50%, -60%)', borderRadius: '50%', background: `radial-gradient(circle, ${t.glow3} 0%, transparent 70%)` }} />
+    <AuthShell
+      eyebrow="Personal journal"
+      title="Welcome back"
+      subtitle="Your pages are waiting for you."
+      footer={<>New here? <Link href="/signup" style={{ color: 'inherit', fontWeight: '600' }}>Create your journal</Link></>}
+    >
+      <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+        <AuthField
+          label="Email"
+          type="email"
+          value={email}
+          onChange={(event) => setEmail(event.target.value)}
+          autoComplete="email"
+          required
+        />
+        <AuthField
+          label="Password"
+          type="password"
+          value={password}
+          onChange={(event) => setPassword(event.target.value)}
+          autoComplete="current-password"
+          required
+        />
 
-      <div className="relative z-10 w-full px-6" style={{ maxWidth: '380px' }}>
-
-        {/* Header */}
-        <div style={{ textAlign: 'center', marginBottom: '2.5rem' }}>
-          <h1 style={{
-            fontFamily: 'var(--font-lora)',
-            color: bg.textColor,
-            fontSize: '28px',
-            fontWeight: '600',
-            letterSpacing: '-0.01em',
-            marginBottom: '6px',
+        {message && (
+          <p role="alert" style={{
+            color: '#a74747', fontFamily: 'var(--font-lora)',
+            fontSize: '11px', lineHeight: '1.5', textAlign: 'center',
           }}>
-            MyLife
-          </h1>
-          <p style={{
-            color: bg.textColor,
-            opacity: 0.7,
-            fontSize: '13px',
-            fontFamily: 'var(--font-lora)',
-            fontStyle: 'italic',
-          }}>
-            welcome back
+            {message}
           </p>
-        </div>
+        )}
 
-        {/* Form — folded paper card */}
-        <div style={{
-          background: t.cardBg,
-          border: `1px solid ${t.cardBorder}`,
-          borderRadius: '6px',
-          padding: '2rem',
-          boxShadow: `0 2px 16px ${t.shadow}`,
-          marginBottom: '1.5rem',
-        }}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '1.25rem' }}>
-            <input
-              type="email"
-              placeholder="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              style={{
-                width: '100%',
-                background: t.entryBg,
-                border: `1px solid ${t.entryBorder}`,
-                borderRadius: '3px',
-                color: t.inputText,
-                fontFamily: 'var(--font-lora)',
-                fontSize: '14px',
-                padding: '10px 12px',
-                outline: 'none',
-                boxSizing: 'border-box',
-                transition: 'border-color 0.15s ease',
-              }}
-              onFocus={(e) => e.currentTarget.style.borderColor = t.accent}
-              onBlur={(e) => e.currentTarget.style.borderColor = t.entryBorder}
-            />
-            <input
-              type="password"
-              placeholder="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              onKeyDown={(e) => { if (e.key === 'Enter') handleLogin() }}
-              style={{
-                width: '100%',
-                background: t.entryBg,
-                border: `1px solid ${t.entryBorder}`,
-                borderRadius: '3px',
-                color: t.inputText,
-                fontFamily: 'var(--font-lora)',
-                fontSize: '14px',
-                padding: '10px 12px',
-                outline: 'none',
-                boxSizing: 'border-box',
-                transition: 'border-color 0.15s ease',
-              }}
-              onFocus={(e) => e.currentTarget.style.borderColor = t.accent}
-              onBlur={(e) => e.currentTarget.style.borderColor = t.entryBorder}
-            />
-          </div>
-
-          <button
-            onClick={handleLogin}
-            disabled={loading}
-            style={{
-              width: '100%',
-              padding: '11px',
-              borderRadius: '3px',
-              background: t.accent,
-              color: '#ffffff',
-              border: 'none',
-              cursor: 'pointer',
-              fontSize: '13px',
-              fontFamily: 'var(--font-lora)',
-              letterSpacing: '0.04em',
-              opacity: loading ? 0.7 : 1,
-              transition: 'opacity 0.15s ease',
-            }}
-          >
-            {loading ? 'logging in...' : 'log in'}
-          </button>
-
-          {message && (
-            <p style={{
-              color: '#c05050',
-              fontSize: '12px',
-              textAlign: 'center',
-              marginTop: '1rem',
-              fontFamily: 'var(--font-lora)',
-              fontStyle: 'italic',
-            }}>
-              {message}
-            </p>
-          )}
-        </div>
-
-        <p style={{
-          color: bg.textColor,
-          opacity: 0.75,
-          fontSize: '12px',
-          textAlign: 'center',
-          fontFamily: 'var(--font-lora)',
-        }}>
-          no account?{' '}
-          <Link href="/signup" style={{
-            color: bg.textColor,
-            textDecoration: 'none',
-            transition: 'color 0.15s ease',
-          }}
-            onMouseEnter={(e) => e.currentTarget.style.color = t.accent}
-            onMouseLeave={(e) => e.currentTarget.style.color = bg.textColor}
-          >
-            start writing
-          </Link>
-        </p>
-      </div>
-    </main>
+        <AuthSubmit loading={loading}>{loading ? 'Opening your journal…' : 'Open journal'}</AuthSubmit>
+      </form>
+    </AuthShell>
   )
 }

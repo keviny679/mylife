@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
 import { useWeather } from '@/lib/weather-context'
+import JournalTabs from '@/components/JournalTabs'
 
 const moods = ['😊 good', '😐 neutral', '😔 sad']
 
@@ -83,6 +84,8 @@ export default function Memories() {
         style={{ background: 'radial-gradient(ellipse at center, transparent 60%, rgba(0,0,0,0.15) 100%)' }} />
 
       <div className="relative z-10 max-w-lg mx-auto px-5 py-8">
+
+        <JournalTabs />
 
         {/* Header */}
         <div style={{ marginBottom: '2rem' }}>
@@ -351,6 +354,7 @@ export default function Memories() {
                                 <p style={{ fontSize: '11px', color: bg.dimText, letterSpacing: '0.03em' }}>
                                   {entryTime}
                                   {entry.weather && ` · ${entry.weather}`}
+                                  {entry.location_name && ` · ${entry.location_name}`}
                                 </p>
                                 {entry.mood && (
                                   <p style={{ fontSize: '10px', color: bg.dimText, fontFamily: 'var(--font-lora)' }}>
@@ -441,9 +445,9 @@ export default function Memories() {
                     {new Date(selectedEntry.created_at).toLocaleDateString('en-US', { weekday: 'long' })},{' '}
                     {new Date(selectedEntry.created_at).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
                   </p>
-                  {selectedEntry.weather && (
+                  {(selectedEntry.weather || selectedEntry.location_name) && (
                     <p style={{ fontSize: '10px', color: bg.dimText, letterSpacing: '0.06em', textTransform: 'uppercase' }}>
-                      {selectedEntry.weather}
+                      {[selectedEntry.weather, selectedEntry.location_name].filter(Boolean).join(' · ')}
                     </p>
                   )}
                   {selectedEntry.mood && (

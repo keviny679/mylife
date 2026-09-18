@@ -19,6 +19,8 @@ interface WeatherContextType {
   background: BackgroundConfig
   location: { lat: number; lon: number } | null
   cityName: string
+  locationStatus: 'idle' | 'loading' | 'ready' | 'denied' | 'unavailable' | 'error'
+  locationMessage: string
   requestLocation: () => Promise<void>
 }
 
@@ -31,6 +33,8 @@ const WeatherContext = createContext<WeatherContextType>({
   background: defaultBg,
   location: null,
   cityName: '',
+  locationStatus: 'idle',
+  locationMessage: '',
   requestLocation: async () => {},
 })
 
@@ -39,9 +43,20 @@ async function reverseGeocode(lat: number, lon: number): Promise<string> {
     const res = await fetch(
       `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=en`
     )
-    const data = await res.json()
-    const city = data.city || data.locality || data.localityInfo?.administrative?.[3]?.name || ''
-    const state = data.principalSubdivisionCode?.replace('US-', '') || data.principalSubdivision || ''
+    if (!res.ok) return ''
+
+    const data: unknown = await res.json()
+    if (!data || typeof data !== 'object') return ''
+
+    const place = data as {
+      city?: string
+      locality?: string
+      principalSubdivisionCode?: string
+      principalSubdivision?: string
+      localityInfo?: { administrative?: Array<{ name?: string }> }
+    }
+    const city = place.city || place.locality || place.localityInfo?.administrative?.[3]?.name || ''
+    const state = place.principalSubdivisionCode?.replace('US-', '') || place.principalSubdivision || ''
     if (city && state) return `${city}, ${state}`
     if (city) return city
     if (state) return state
@@ -57,6 +72,8 @@ export function WeatherProvider({ children }: { children: ReactNode }) {
   const [background, setBackground] = useState<BackgroundConfig>(defaultBg)
   const [location, setLocation] = useState<{ lat: number; lon: number } | null>(null)
   const [cityName, setCityName] = useState<string>('')
+  const [locationStatus, setLocationStatus] = useState<WeatherContextType['locationStatus']>('idle')
+  const [locationMessage, setLocationMessage] = useState('')
 
   // Update time every minute
   useEffect(() => {
@@ -85,7 +102,8 @@ export function WeatherProvider({ children }: { children: ReactNode }) {
         .eq('id', user.id)
         .single()
 
-      if (profile?.latitude && profile?.longitude) {
+      if (profile?.latitude != null && profile?.longitude != null) {
+        setLocationStatus('loading')
         const loc = { lat: profile.latitude, lon: profile.longitude }
         setLocation(loc)
 
@@ -98,6 +116,11 @@ export function WeatherProvider({ children }: { children: ReactNode }) {
           setWeather(w)
           const time = getTimeOfDay()
           setBackground(getBackgroundConfig(time, getWeatherCategory(w.conditionCode, w.isDay)))
+          setLocationStatus('ready')
+          setLocationMessage('')
+        } else {
+          setLocationStatus('error')
+          setLocationMessage('Weather is unavailable right now. Tap to try again.')
         }
       }
     }
@@ -105,8 +128,28 @@ export function WeatherProvider({ children }: { children: ReactNode }) {
   }, [])
 
   async function requestLocation() {
-    const loc = await getUserLocation()
-    if (!loc) return
+    setLocationStatus('loading')
+    setLocationMessage('Finding your location…')
+
+    const result = await getUserLocation()
+    if (!result.ok) {
+      if (result.reason === 'denied') {
+        setLocationStatus('denied')
+        setLocationMessage('Location is blocked. Allow it in your browser settings to add local weather.')
+      } else if (result.reason === 'timeout') {
+        setLocationStatus('unavailable')
+        setLocationMessage('Location took too long. Tap to try again.')
+      } else if (result.reason === 'unsupported') {
+        setLocationStatus('unavailable')
+        setLocationMessage('This browser does not support location.')
+      } else {
+        setLocationStatus('unavailable')
+        setLocationMessage('Your location could not be found. Tap to try again.')
+      }
+      return
+    }
+
+    const loc = result.location
     setLocation(loc)
 
     // Reverse geocode for accurate city name
@@ -127,11 +170,25 @@ export function WeatherProvider({ children }: { children: ReactNode }) {
       setWeather(w)
       const time = getTimeOfDay()
       setBackground(getBackgroundConfig(time, getWeatherCategory(w.conditionCode, w.isDay)))
+      setLocationStatus('ready')
+      setLocationMessage('')
+    } else {
+      setLocationStatus('error')
+      setLocationMessage('Weather is unavailable right now. Tap to try again.')
     }
   }
 
   return (
-    <WeatherContext.Provider value={{ weather, timeOfDay, background, location, cityName, requestLocation }}>
+    <WeatherContext.Provider value={{
+      weather,
+      timeOfDay,
+      background,
+      location,
+      cityName,
+      locationStatus,
+      locationMessage,
+      requestLocation,
+    }}>
       {children}
     </WeatherContext.Provider>
   )

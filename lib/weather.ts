@@ -27,6 +27,12 @@ export interface BackgroundConfig {
   dimText: string
 }
 
+export type WeatherCategory = 'clear' | 'clear-night' | 'cloudy' | 'overcast' | 'mist' | 'rain' | 'snow' | 'storm'
+export type LocationFailure = 'denied' | 'unavailable' | 'timeout' | 'unsupported'
+export type LocationResult =
+  | { ok: true; location: { lat: number; lon: number } }
+  | { ok: false; reason: LocationFailure }
+
 // Detect time of day period based on current hour
 export function getTimeOfDay(): TimeOfDay {
   const hour = new Date().getHours()
@@ -54,30 +60,101 @@ export async function fetchWeather(lat: number, lon: number): Promise<WeatherDat
   }
 }
 
-// Get user coordinates via browser geolocation
-export function getUserLocation(): Promise<{ lat: number; lon: number } | null> {
+// Get user coordinates via browser geolocation while preserving the reason a
+// request failed so the UI can offer useful guidance.
+export function getUserLocation(): Promise<LocationResult> {
   return new Promise((resolve) => {
-    if (!navigator.geolocation) { resolve(null); return }
+    if (!navigator.geolocation) {
+      resolve({ ok: false, reason: 'unsupported' })
+      return
+    }
+
     navigator.geolocation.getCurrentPosition(
-      (pos) => resolve({ lat: pos.coords.latitude, lon: pos.coords.longitude }),
-      () => resolve(null),
-      { timeout: 8000 }
+      (pos) => resolve({
+        ok: true,
+        location: { lat: pos.coords.latitude, lon: pos.coords.longitude },
+      }),
+      (error) => {
+        if (error.code === error.PERMISSION_DENIED) {
+          resolve({ ok: false, reason: 'denied' })
+        } else if (error.code === error.TIMEOUT) {
+          resolve({ ok: false, reason: 'timeout' })
+        } else {
+          resolve({ ok: false, reason: 'unavailable' })
+        }
+      },
+      { enableHighAccuracy: false, maximumAge: 10 * 60 * 1000, timeout: 8000 }
     )
   })
 }
 
-// Weather condition to simple category
-export function getWeatherCategory(code: number, isDay: boolean): string {
+// WeatherAPI condition codes are identifiers, not a severity-ordered range.
+// Keep this map aligned with https://www.weatherapi.com/docs/weather_conditions.json.
+const WEATHER_CATEGORIES: Record<number, Exclude<WeatherCategory, 'clear' | 'clear-night'>> = {
+  1003: 'cloudy',
+  1006: 'cloudy',
+  1009: 'overcast',
+  1012: 'mist',
+  1015: 'mist',
+  1018: 'mist',
+  1021: 'storm',
+  1024: 'storm',
+  1027: 'storm',
+  1030: 'mist',
+  1033: 'mist',
+  1036: 'mist',
+  1039: 'mist',
+  1042: 'mist',
+  1045: 'mist',
+  1048: 'mist',
+  1063: 'rain',
+  1066: 'snow',
+  1069: 'snow',
+  1072: 'rain',
+  1087: 'storm',
+  1114: 'snow',
+  1117: 'snow',
+  1135: 'mist',
+  1147: 'mist',
+  1150: 'rain',
+  1153: 'rain',
+  1168: 'rain',
+  1171: 'rain',
+  1180: 'rain',
+  1183: 'rain',
+  1186: 'rain',
+  1189: 'rain',
+  1192: 'rain',
+  1195: 'rain',
+  1198: 'rain',
+  1201: 'rain',
+  1204: 'snow',
+  1207: 'snow',
+  1210: 'snow',
+  1213: 'snow',
+  1216: 'snow',
+  1219: 'snow',
+  1222: 'snow',
+  1225: 'snow',
+  1237: 'snow',
+  1240: 'rain',
+  1243: 'rain',
+  1246: 'rain',
+  1249: 'snow',
+  1252: 'snow',
+  1255: 'snow',
+  1258: 'snow',
+  1261: 'snow',
+  1264: 'snow',
+  1273: 'storm',
+  1276: 'storm',
+  1279: 'storm',
+  1282: 'storm',
+}
+
+export function getWeatherCategory(code: number, isDay: boolean): WeatherCategory {
   if (code === 1000) return isDay ? 'clear' : 'clear-night'
-  if (code <= 1009) return 'cloudy'
-  if (code <= 1030) return 'mist'
-  if (code <= 1087) return 'overcast'
-  if (code <= 1117) return 'snow'
-  if (code <= 1201) return 'rain'
-  if (code <= 1225) return 'snow'
-  if (code <= 1246) return 'rain'
-  if (code <= 1282) return 'storm'
-  return 'clear'
+  return WEATHER_CATEGORIES[code] ?? 'cloudy'
 }
 
 // Generate background config based on time + weather

@@ -1,8 +1,8 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { useAtmosphere } from '@/lib/atmosphere'
 
@@ -14,143 +14,88 @@ export default function Home() {
   useEffect(() => {
     async function checkSession() {
       const { data: { session } } = await supabase.auth.getSession()
-      if (session) {
-        router.push('/journal')
-      } else {
-        setChecking(false)
-      }
+      if (session) router.push('/journal')
+      else setChecking(false)
     }
     checkSession()
-  }, [])
+  }, [router])
 
-  if (checking) {
-    return <main className="min-h-screen" style={{ background: bg.gradient }} />
-  }
+  if (checking) return <main className="min-h-screen" style={{ background: bg.gradient }} />
 
   return (
-    <main className="min-h-screen relative overflow-hidden flex flex-col items-center justify-center" style={{ background: bg.gradient, transition: 'background 2s ease' }}>
-      <div className="absolute bottom-0 left-0 w-96 h-96 rounded-full pointer-events-none" style={{ background: `radial-gradient(circle, ${t.glow1} 0%, transparent 70%)` }} />
-      <div className="absolute top-0 right-0 w-72 h-72 rounded-full pointer-events-none" style={{ background: `radial-gradient(circle, ${t.glow2} 0%, transparent 70%)` }} />
-      <div className="absolute pointer-events-none" style={{ top: 0, left: '50%', width: '600px', height: '600px', transform: 'translate(-50%, -60%)', borderRadius: '50%', background: `radial-gradient(circle, ${t.glow3} 0%, transparent 70%)` }} />
+    <main className="min-h-screen relative overflow-hidden flex items-center justify-center" style={{
+      background: bg.gradient, transition: 'background 2s ease', padding: '48px 20px',
+    }}>
+      <div className="absolute inset-0 pointer-events-none" style={{
+        background: 'radial-gradient(ellipse at center, transparent 58%, rgba(0,0,0,0.14) 100%)',
+      }} />
 
-      <div className="relative z-10 flex flex-col items-center text-center px-6" style={{ maxWidth: '480px' }}>
-
-        {/* Logo */}
+      <div className="relative z-10 w-full" style={{ maxWidth: '430px', textAlign: 'center' }}>
+        <p style={{
+          color: bg.textColor, opacity: 0.58, fontSize: '9px',
+          letterSpacing: '0.22em', textTransform: 'uppercase', marginBottom: '8px',
+        }}>
+          Your personal journal
+        </p>
         <h1 style={{
-          fontFamily: 'var(--font-lora)',
-          color: bg.textColor,
-          fontSize: '48px',
-          fontWeight: '600',
-          letterSpacing: '-0.02em',
-          marginBottom: '12px',
-          lineHeight: '1',
+          color: bg.textColor, fontFamily: 'var(--font-lora)',
+          fontSize: '52px', fontWeight: '300', lineHeight: '1',
+          letterSpacing: '-0.04em', marginBottom: '12px',
         }}>
           MyLife
         </h1>
-
-        {/* Tagline */}
         <p style={{
-          fontFamily: 'var(--font-lora)',
-          color: bg.textColor,
-          fontSize: '16px',
-          fontStyle: 'italic',
-          marginBottom: '6px',
-          lineHeight: '1.5',
+          color: bg.textColor, opacity: 0.76,
+          fontFamily: 'var(--font-lora)', fontSize: '14px',
+          fontStyle: 'italic', marginBottom: '28px',
         }}>
-          A private record of your days.
-        </p>
-        <p style={{
-          color: bg.textColor,
-          fontSize: '13px',
-          marginBottom: '52px',
-          letterSpacing: '0.02em',
-        }}>
-          Write at the end of the day. Just for you.
+          Remember not only what happened, but what the world felt like.
         </p>
 
-        {/* CTA buttons */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', width: '220px', marginBottom: '64px' }}>
-          <Link
-            href="/signup"
-            style={{
-              display: 'block',
-              width: '100%',
-              padding: '12px',
-              borderRadius: '4px',
-              background: t.accent,
-              color: '#ffffff',
-              fontSize: '13px',
-              fontFamily: 'var(--font-lora)',
-              textAlign: 'center',
-              textDecoration: 'none',
-              letterSpacing: '0.04em',
-              transition: 'opacity 0.15s ease',
-            }}
-            onMouseEnter={(e) => e.currentTarget.style.opacity = '0.85'}
-            onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}
-          >
-            start writing
-          </Link>
-          <Link
-            href="/login"
-            style={{
-              display: 'block',
-              width: '100%',
-              padding: '12px',
-              borderRadius: '4px',
-              background: 'transparent',
-              color: bg.textColor,
-              fontSize: '13px',
-              fontFamily: 'var(--font-lora)',
-              textAlign: 'center',
-              textDecoration: 'none',
-              border: `1px solid ${t.cardBorder}`,
-              letterSpacing: '0.04em',
-              transition: 'color 0.15s ease, border-color 0.15s ease',
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.color = bg.textColor
-              e.currentTarget.style.borderColor = t.textDim
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.color = bg.textColor
-              e.currentTarget.style.borderColor = t.cardBorder
-            }}
-          >
-            log in
-          </Link>
-        </div>
-
-        {/* Feature strip — quiet, no emojis */}
-        <div style={{
-          display: 'flex',
-          gap: '32px',
-          flexWrap: 'wrap',
-          justifyContent: 'center',
-          borderTop: `1px solid ${t.cardBorder}`,
-          paddingTop: '28px',
+        <section style={{
+          background: t.cardBg, border: `1px solid ${t.cardBorder}`,
+          borderRadius: '16px', padding: '26px 24px 22px',
+          boxShadow: `0 16px 48px ${t.shadow}`, backdropFilter: 'blur(12px)',
         }}>
-          {[
-            'ambient sounds',
-            'weather + time',
-            'mood tracking',
-            'private memories',
-            'anonymous letters',
-          ].map((feature) => (
-            <span
-              key={feature}
-              style={{
-                fontSize: '11px',
-                color: bg.textColor,
-                letterSpacing: '0.08em',
-                textTransform: 'uppercase',
-                fontFamily: 'var(--font-lora)',
-              }}
-            >
-              {feature}
-            </span>
-          ))}
-        </div>
+          <p style={{
+            color: t.inputText, fontFamily: 'var(--font-lora)',
+            fontSize: '17px', lineHeight: '1.7', marginBottom: '20px',
+          }}>
+            A quiet place for your entries, memories, weather, and passing days.
+          </p>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '9px' }}>
+            <Link href="/signup" style={{
+              padding: '11px 14px', borderRadius: '9px',
+              background: t.accent, color: '#ffffff', textDecoration: 'none',
+              fontFamily: 'var(--font-lora)', fontSize: '13px',
+            }}>
+              Begin a journal
+            </Link>
+            <Link href="/login" style={{
+              padding: '11px 14px', borderRadius: '9px',
+              background: 'transparent', color: t.textMuted,
+              border: `1px solid ${t.cardBorder}`, textDecoration: 'none',
+              fontFamily: 'var(--font-lora)', fontSize: '13px',
+            }}>
+              Open my journal
+            </Link>
+          </div>
+
+          <div style={{
+            display: 'flex', justifyContent: 'center', gap: '14px',
+            borderTop: `1px solid ${t.cardBorder}`, marginTop: '22px', paddingTop: '15px',
+          }}>
+            {['private', 'weather-aware', 'yours'].map((word) => (
+              <span key={word} style={{
+                color: t.textDim, fontSize: '9px',
+                letterSpacing: '0.1em', textTransform: 'uppercase',
+              }}>
+                {word}
+              </span>
+            ))}
+          </div>
+        </section>
       </div>
     </main>
   )

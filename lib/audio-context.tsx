@@ -1,6 +1,6 @@
 'use client'
 
-import { createContext, useContext, useState, useEffect, useRef, ReactNode } from 'react'
+import { createContext, useContext, useState, useEffect, useRef, useCallback, ReactNode } from 'react'
 
 export interface Track {
   id: number
@@ -49,7 +49,6 @@ const AudioContext = createContext<AudioContextType>({
 
 export function AudioProvider({ children }: { children: ReactNode }) {
   const [isPlaying, setIsPlaying] = useState(false)
-  const [hasInteracted, setHasInteracted] = useState(false)
   const [isShuffled, setIsShuffled] = useState(true)
   const [queue, setQueue] = useState<Track[]>(() => shuffleArray(playlist))
   const [queueIndex, setQueueIndex] = useState(0)
@@ -57,26 +56,25 @@ export function AudioProvider({ children }: { children: ReactNode }) {
 
   const currentTrack = queue[queueIndex]
 
-  // Auto-start on first user interaction anywhere on the page
-  useEffect(() => {
-    function handleFirstInteraction() {
-      if (!hasInteracted) {
-        setHasInteracted(true)
-        setIsPlaying(true)
+  const goToNext = useCallback(() => {
+    setQueueIndex((prev) => {
+      if (prev + 1 >= queue.length) {
+        setQueue(shuffleArray(playlist))
+        return 0
       }
-    }
-    window.addEventListener('click', handleFirstInteraction, { once: true })
-    return () => window.removeEventListener('click', handleFirstInteraction)
-  }, [hasInteracted])
+      return prev + 1
+    })
+  }, [queue.length])
 
   useEffect(() => {
-    audioRef.current = new Audio(currentTrack.file)
-    audioRef.current.addEventListener('ended', handleTrackEnd)
+    const audio = new Audio(currentTrack.file)
+    audioRef.current = audio
+    audio.addEventListener('ended', goToNext)
     return () => {
-      audioRef.current?.pause()
-      audioRef.current?.removeEventListener('ended', handleTrackEnd)
+      audio.pause()
+      audio.removeEventListener('ended', goToNext)
     }
-  }, [queueIndex, queue])
+  }, [currentTrack.file, goToNext])
 
   useEffect(() => {
     if (!audioRef.current) return
@@ -86,20 +84,6 @@ export function AudioProvider({ children }: { children: ReactNode }) {
       audioRef.current.pause()
     }
   }, [isPlaying, queueIndex, queue])
-
-  function handleTrackEnd() {
-    goToNext()
-  }
-
-  function goToNext() {
-    setQueueIndex((prev) => {
-      if (prev + 1 >= queue.length) {
-        setQueue(shuffleArray(playlist))
-        return 0
-      }
-      return prev + 1
-    })
-  }
 
   function goToPrev() {
     setQueueIndex((prev) => (prev - 1 + queue.length) % queue.length)

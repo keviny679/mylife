@@ -1,13 +1,18 @@
 'use client'
 
 import { useState } from 'react'
+import { usePathname } from 'next/navigation'
 import { useAudio } from '@/lib/audio-context'
 import { useAtmosphere } from '@/lib/atmosphere'
 
 export default function AudioPlayer() {
+  const pathname = usePathname()
   const { isPlaying, currentTrack, togglePlay, skipNext, skipPrev, toggleShuffle, isShuffled } = useAudio()
   const { t } = useAtmosphere()
   const [expanded, setExpanded] = useState(false)
+
+  // Keep the welcome and authentication screens quiet and visually focused.
+  if (pathname === '/' || pathname === '/login' || pathname === '/signup') return null
 
   return (
     <div style={{
@@ -56,6 +61,7 @@ export default function AudioPlayer() {
             {/* Shuffle */}
             <button
               onClick={toggleShuffle}
+              aria-label={isShuffled ? 'Turn shuffle off' : 'Turn shuffle on'}
               style={{
                 background: 'none', border: 'none', cursor: 'pointer',
                 fontSize: '13px',
@@ -72,6 +78,7 @@ export default function AudioPlayer() {
             {/* Skip back */}
             <button
               onClick={skipPrev}
+              aria-label="Previous track"
               style={{
                 background: 'none', border: 'none', cursor: 'pointer',
                 color: t.textMuted, padding: '4px',
@@ -85,6 +92,7 @@ export default function AudioPlayer() {
             {/* Play/pause */}
             <button
               onClick={togglePlay}
+              aria-label={isPlaying ? 'Pause ambient music' : 'Play ambient music'}
               style={{
                 background: t.accent,
                 border: 'none',
@@ -109,6 +117,7 @@ export default function AudioPlayer() {
             {/* Skip forward */}
             <button
               onClick={skipNext}
+              aria-label="Next track"
               style={{
                 background: 'none', border: 'none', cursor: 'pointer',
                 color: t.textMuted, padding: '4px',
@@ -122,6 +131,7 @@ export default function AudioPlayer() {
             {/* Close */}
             <button
               onClick={() => setExpanded(false)}
+              aria-label="Close audio controls"
               style={{
                 background: 'none', border: 'none', cursor: 'pointer',
                 fontSize: '12px',
@@ -141,6 +151,7 @@ export default function AudioPlayer() {
       {/* Collapsed pill */}
       <button
         onClick={() => setExpanded(!expanded)}
+        aria-label={expanded ? 'Collapse audio controls' : 'Open audio controls'}
         style={{
           background: t.cardBg,
           border: `1px solid ${t.cardBorder}`,

@@ -5,7 +5,8 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
 import { useWeather } from '@/lib/weather-context'
-import { formatWeatherStamp } from '@/lib/weather'
+import { formatWeatherStamp, getWeatherCategory } from '@/lib/weather'
+import JournalTabs from '@/components/JournalTabs'
 
 const moodOptions = [
   { value: '😊 good', label: 'good' },
@@ -13,6 +14,18 @@ const moodOptions = [
   { value: '😔 sad', label: 'sad' },
   { value: '❓unsure', label: 'unsure' },
 ]
+
+function padDatePart(value: number): string {
+  return String(value).padStart(2, '0')
+}
+
+function getLocalMoment(date: Date) {
+  return {
+    localDate: `${date.getFullYear()}-${padDatePart(date.getMonth() + 1)}-${padDatePart(date.getDate())}`,
+    localTime: `${padDatePart(date.getHours())}:${padDatePart(date.getMinutes())}:${padDatePart(date.getSeconds())}`,
+    timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || null,
+  }
+}
 
 function calculateStreak(entries: any[]): number {
   if (entries.length === 0) return 0
@@ -67,9 +80,16 @@ export default function Journal() {
   const [body, setBody] = useState('')
   const [mood, setMood] = useState('')
   const [saving, setSaving] = useState(false)
-  const [locationAsked, setLocationAsked] = useState(false)
   const router = useRouter()
-  const { weather, background, timeOfDay, location, cityName, requestLocation } = useWeather()
+  const {
+    weather,
+    background,
+    timeOfDay,
+    cityName,
+    locationStatus,
+    locationMessage,
+    requestLocation,
+  } = useWeather()
 
   const bg = background
   const now = new Date()
@@ -91,14 +111,6 @@ export default function Journal() {
     getUser()
   }, [])
 
-  // Ask for location once if not already granted
-  useEffect(() => {
-    if (!locationAsked && !location) {
-      setLocationAsked(true)
-      requestLocation()
-    }
-  }, [locationAsked, location, requestLocation])
-
   async function handleSaveEntry() {
     if (!body.trim()) return
     if (body.length > 50000) {
@@ -117,14 +129,42 @@ export default function Journal() {
       setSaving(false)
       return
     }
-    const { error } = await supabase.from('entries').insert({
+    const capturedAt = new Date()
+    const localMoment = getLocalMoment(capturedAt)
+    const legacyEntry = {
       user_id: user.id,
       title: title.trim() || null,
       body: body.trim(),
       mood: mood || null,
       weather: weather ? formatWeatherStamp(weather) : null,
       temperature: weather ? weather.temp : null,
-    })
+    }
+    const momentStamp = {
+      ...legacyEntry,
+      location_name: cityName || weather?.location || null,
+      weather_condition: weather?.condition || null,
+      weather_code: weather?.conditionCode || null,
+      weather_is_day: weather?.isDay ?? null,
+      weather_category: weather
+        ? getWeatherCategory(weather.conditionCode, weather.isDay)
+        : null,
+      local_date: localMoment.localDate,
+      local_time: localMoment.localTime,
+      timezone: localMoment.timezone,
+      time_period: timeOfDay.period,
+    }
+
+    let { error } = await supabase.from('entries').insert(momentStamp)
+
+    // Keep writing available while an existing deployment is waiting for the
+    // tracked database migration to be applied.
+    if (error?.code === 'PGRST204') {
+      const fallback = await supabase.from('entries').insert(legacyEntry)
+      error = fallback.error
+      if (!error) {
+        alert('Entry saved. Apply the moment-stamp database migration to preserve location and atmosphere on future entries.')
+      }
+    }
     if (!error) {
       setTitle('')
       setBody('')
@@ -197,6 +237,8 @@ export default function Journal() {
 
       <div className="relative z-10 max-w-lg mx-auto px-5 py-8">
 
+        <JournalTabs />
+
         {/*
           HEADER — Your Name style
           Large time display, weather stamp, location
@@ -258,6 +300,14 @@ export default function Journal() {
                   {cityName || weather.location}
                 </span>
               </>
+            ) : locationStatus === 'loading' ? (
+              <span style={{
+                fontSize: '11px', color: bg.textColor,
+                opacity: 0.55, letterSpacing: '0.08em',
+                fontFamily: 'var(--font-lora)', fontStyle: 'italic',
+              }}>
+                finding your location…
+              </span>
             ) : (
               <button
                 onClick={requestLocation}
@@ -269,10 +319,27 @@ export default function Journal() {
                   textDecoration: 'underline',
                 }}
               >
-                enable location for weather
+                {locationStatus === 'denied'
+                  ? 'location blocked · try again'
+                  : locationStatus === 'error'
+                    ? 'weather unavailable · try again'
+                    : locationStatus === 'unavailable'
+                      ? 'location unavailable · try again'
+                      : 'enable location for local weather'}
               </button>
             )}
           </div>
+
+          {!weather && locationMessage && locationStatus !== 'loading' && (
+            <p style={{
+              maxWidth: '360px', margin: '0 auto 8px',
+              color: bg.textColor, opacity: 0.5,
+              fontSize: '10px', lineHeight: '1.5',
+              fontFamily: 'var(--font-lora)',
+            }}>
+              {locationMessage}
+            </p>
+          )}
 
           {/* MyLife label */}
           <p style={{
@@ -532,6 +599,7 @@ export default function Journal() {
                       }}>
                         {entryTime}
                         {entry.weather && ` · ${entry.weather}`}
+                        {entry.location_name && ` · ${entry.location_name}`}
                       </p>
                       {entry.mood && (
                         <p style={{ fontSize: '11px', color: bg.dimText }}>

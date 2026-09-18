@@ -1,9 +1,10 @@
 'use client'
 
 import { useState } from 'react'
+import type { FormEvent } from 'react'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
-import { useAtmosphere } from '@/lib/atmosphere'
+import AuthShell, { AuthField, AuthSubmit } from '@/components/AuthShell'
 
 export default function SignUp() {
   const [email, setEmail] = useState('')
@@ -11,150 +12,76 @@ export default function SignUp() {
   const [name, setName] = useState('')
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState('')
-  const { background: bg, t } = useAtmosphere()
+  const [success, setSuccess] = useState(false)
 
-  async function handleSignUp() {
+  async function handleSignUp(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
     setLoading(true)
+    setMessage('')
+    setSuccess(false)
+
     const { error } = await supabase.auth.signUp({
-      email,
+      email: email.trim(),
       password,
-      options: { data: { display_name: name } }
+      options: { data: { display_name: name.trim() } },
     })
+
     if (error) {
       setMessage(error.message)
     } else {
-      setMessage('Check your email to confirm your account.')
+      setSuccess(true)
+      setMessage('Check your email to confirm your account, then return here to log in.')
     }
     setLoading(false)
   }
 
   return (
-    <main className="min-h-screen relative overflow-hidden flex items-center justify-center" style={{ background: bg.gradient, transition: 'background 2s ease' }}>
-      <div className="absolute bottom-0 left-0 w-96 h-96 rounded-full pointer-events-none" style={{ background: `radial-gradient(circle, ${t.glow1} 0%, transparent 70%)` }} />
-      <div className="absolute top-0 right-0 w-72 h-72 rounded-full pointer-events-none" style={{ background: `radial-gradient(circle, ${t.glow2} 0%, transparent 70%)` }} />
-      <div className="absolute pointer-events-none" style={{ top: 0, left: '50%', width: '600px', height: '600px', transform: 'translate(-50%, -60%)', borderRadius: '50%', background: `radial-gradient(circle, ${t.glow3} 0%, transparent 70%)` }} />
+    <AuthShell
+      eyebrow="A place for your days"
+      title="Begin your journal"
+      subtitle="Private by default. Written in your own voice."
+      footer={<>Already have a journal? <Link href="/login" style={{ color: 'inherit', fontWeight: '600' }}>Log in</Link></>}
+    >
+      <form onSubmit={handleSignUp} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+        <AuthField
+          label="Name"
+          type="text"
+          value={name}
+          onChange={(event) => setName(event.target.value)}
+          autoComplete="name"
+          maxLength={80}
+          required
+        />
+        <AuthField
+          label="Email"
+          type="email"
+          value={email}
+          onChange={(event) => setEmail(event.target.value)}
+          autoComplete="email"
+          required
+        />
+        <AuthField
+          label="Password"
+          type="password"
+          value={password}
+          onChange={(event) => setPassword(event.target.value)}
+          autoComplete="new-password"
+          minLength={6}
+          required
+        />
 
-      <div className="relative z-10 w-full px-6" style={{ maxWidth: '380px' }}>
-
-        {/* Header */}
-        <div style={{ textAlign: 'center', marginBottom: '2.5rem' }}>
-          <h1 style={{
-            fontFamily: 'var(--font-lora)',
-            color: bg.textColor,
-            fontSize: '28px',
-            fontWeight: '600',
-            letterSpacing: '-0.01em',
-            marginBottom: '6px',
+        {message && (
+          <p role={success ? 'status' : 'alert'} style={{
+            color: success ? '#477c68' : '#a74747',
+            fontFamily: 'var(--font-lora)', fontSize: '11px',
+            lineHeight: '1.5', textAlign: 'center',
           }}>
-            MyLife
-          </h1>
-          <p style={{
-            color: bg.textColor,
-            opacity: 0.7,
-            fontSize: '13px',
-            fontFamily: 'var(--font-lora)',
-            fontStyle: 'italic',
-          }}>
-            a private record of your days
+            {message}
           </p>
-        </div>
+        )}
 
-        {/* Form */}
-        <div style={{
-          background: t.cardBg,
-          border: `1px solid ${t.cardBorder}`,
-          borderRadius: '6px',
-          padding: '2rem',
-          boxShadow: `0 2px 16px ${t.shadow}`,
-          marginBottom: '1.5rem',
-        }}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '1.25rem' }}>
-            {[
-              { type: 'text', placeholder: 'your name', value: name, onChange: setName },
-              { type: 'email', placeholder: 'email', value: email, onChange: setEmail },
-              { type: 'password', placeholder: 'password', value: password, onChange: setPassword },
-            ].map((field) => (
-              <input
-                key={field.placeholder}
-                type={field.type}
-                placeholder={field.placeholder}
-                value={field.value}
-                onChange={(e) => field.onChange(e.target.value)}
-                onKeyDown={field.type === 'password' ? (e) => { if (e.key === 'Enter') handleSignUp() } : undefined}
-                style={{
-                  width: '100%',
-                  background: t.entryBg,
-                  border: `1px solid ${t.entryBorder}`,
-                  borderRadius: '3px',
-                  color: t.inputText,
-                  fontFamily: 'var(--font-lora)',
-                  fontSize: '14px',
-                  padding: '10px 12px',
-                  outline: 'none',
-                  boxSizing: 'border-box',
-                  transition: 'border-color 0.15s ease',
-                }}
-                onFocus={(e) => e.currentTarget.style.borderColor = t.accent}
-                onBlur={(e) => e.currentTarget.style.borderColor = t.entryBorder}
-              />
-            ))}
-          </div>
-
-          <button
-            onClick={handleSignUp}
-            disabled={loading}
-            style={{
-              width: '100%',
-              padding: '11px',
-              borderRadius: '3px',
-              background: t.accent,
-              color: '#ffffff',
-              border: 'none',
-              cursor: 'pointer',
-              fontSize: '13px',
-              fontFamily: 'var(--font-lora)',
-              letterSpacing: '0.04em',
-              opacity: loading ? 0.7 : 1,
-              transition: 'opacity 0.15s ease',
-            }}
-          >
-            {loading ? 'creating account...' : 'create account'}
-          </button>
-
-          {message && (
-            <p style={{
-              color: message.includes('Check') ? t.accent : '#c05050',
-              fontSize: '12px',
-              textAlign: 'center',
-              marginTop: '1rem',
-              fontFamily: 'var(--font-lora)',
-              fontStyle: 'italic',
-            }}>
-              {message}
-            </p>
-          )}
-        </div>
-
-        <p style={{
-          color: bg.textColor,
-          opacity: 0.75,
-          fontSize: '12px',
-          textAlign: 'center',
-          fontFamily: 'var(--font-lora)',
-        }}>
-          already have an account?{' '}
-          <Link href="/login" style={{
-            color: bg.textColor,
-            textDecoration: 'none',
-            transition: 'color 0.15s ease',
-          }}
-            onMouseEnter={(e) => e.currentTarget.style.color = t.accent}
-            onMouseLeave={(e) => e.currentTarget.style.color = bg.textColor}
-          >
-            log in
-          </Link>
-        </p>
-      </div>
-    </main>
+        <AuthSubmit loading={loading}>{loading ? 'Creating your journal…' : 'Create journal'}</AuthSubmit>
+      </form>
+    </AuthShell>
   )
 }

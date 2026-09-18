@@ -17,7 +17,7 @@ export default function AuthShell({ eyebrow, title, subtitle, children, footer }
 
   return (
     <main className="min-h-screen relative overflow-hidden flex items-center justify-center" style={{
-      background: bg.gradient, transition: 'background 2s ease', padding: '48px 20px',
+      padding: '48px 20px',
     }}>
       <div className="absolute inset-0 pointer-events-none" style={{
         background: 'radial-gradient(ellipse at center, transparent 58%, rgba(0,0,0,0.14) 100%)',

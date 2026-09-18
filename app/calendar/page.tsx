@@ -111,7 +111,7 @@ export default function CalendarPage() {
 
   if (loading) {
     return (
-      <main className="min-h-screen flex items-center justify-center" style={{ background: bg.gradient }}>
+      <main className="min-h-screen flex items-center justify-center">
         <p style={{ color: bg.textColor, fontFamily: 'var(--font-lora)', fontStyle: 'italic', opacity: 0.7 }}>
           Opening your calendar…
         </p>
@@ -120,7 +120,7 @@ export default function CalendarPage() {
   }
 
   return (
-    <main className="min-h-screen relative overflow-hidden" style={{ background: bg.gradient, transition: 'background 2s ease' }}>
+    <main className="min-h-screen relative overflow-hidden">
       <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse at center, transparent 60%, rgba(0,0,0,0.14) 100%)' }} />
 
       <div className="relative z-10 max-w-lg mx-auto px-5 py-8">

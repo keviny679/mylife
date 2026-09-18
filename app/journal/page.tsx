@@ -188,7 +188,7 @@ export default function Journal() {
   if (loading) {
     return (
       <main className="min-h-screen flex items-center justify-center"
-        style={{ background: bg.gradient }}>
+      >
         <p style={{ color: bg.textColor, fontFamily: 'var(--font-lora)', fontStyle: 'italic', opacity: 0.7 }}>
           Loading...
         </p>
@@ -234,7 +234,7 @@ export default function Journal() {
   return (
     <main
       className="min-h-screen relative overflow-hidden"
-      style={{ background: bg.gradient, transition: 'background 2s ease' }}
+      style={{ background: 'transparent' }}
     >
       {/* Subtle vignette overlay */}
       <div

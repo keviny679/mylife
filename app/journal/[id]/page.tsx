@@ -108,7 +108,7 @@ export default function EntryDetail({ params }: { params: Promise<{ id: string }
   if (loading) {
     return (
       <main className="min-h-screen flex items-center justify-center"
-        style={{ background: bg.gradient }}>
+      >
         <p style={{ color: bg.textColor, fontFamily: 'var(--font-lora)', fontStyle: 'italic', opacity: 0.6 }}>
           Loading...
         </p>
@@ -119,7 +119,7 @@ export default function EntryDetail({ params }: { params: Promise<{ id: string }
   if (notFound) {
     return (
       <main className="min-h-screen flex flex-col items-center justify-center"
-        style={{ background: bg.gradient }}>
+      >
         <p style={{ color: bg.textColor, fontFamily: 'var(--font-lora)', fontStyle: 'italic', opacity: 0.6, marginBottom: '1rem' }}>
           Entry not found.
         </p>
@@ -142,7 +142,7 @@ export default function EntryDetail({ params }: { params: Promise<{ id: string }
   return (
     <main
       className="min-h-screen relative overflow-hidden"
-      style={{ background: bg.gradient, transition: 'background 2s ease' }}
+      style={{ background: 'transparent' }}
     >
       {/* Vignette */}
       <div

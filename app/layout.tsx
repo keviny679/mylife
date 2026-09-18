@@ -5,6 +5,7 @@ import { AudioProvider } from "@/lib/audio-context";
 import { WeatherProvider } from "@/lib/weather-context";
 import AudioPlayer from "@/components/AudioPlayer";
 import NavDrawer from "@/components/NavDrawer";
+import AtmosphereBackdrop from "@/components/AtmosphereBackdrop";
 import { Analytics } from '@vercel/analytics/react'
 
 const lora = Lora({
@@ -26,11 +27,14 @@ export default function RootLayout({
     <html lang="en" className={`${lora.variable} h-full`}>
       <body className="min-h-full flex flex-col">
         <WeatherProvider>
+          <AtmosphereBackdrop />
+          <div className="relative z-10 min-h-screen">
             <AudioProvider>
               <NavDrawer />
               {children}
               <AudioPlayer />
             </AudioProvider>
+          </div>
         </WeatherProvider>
         <Analytics />
       </body>

@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
 import { useWeather } from '@/lib/weather-context'
+import type { JournalEntry } from '@/lib/models'
 
 const BLOCKED_TERMS = [
   'nigger', 'nigga', 'faggot', 'chink', 'spic', 'kike',
@@ -20,7 +21,7 @@ function containsBlockedContent(text: string): boolean {
 
 export default function EntryDetail({ params }: { params: Promise<{ id: string }> }) {
   const { id } = React.use(params)
-  const [entry, setEntry] = useState<any>(null)
+  const [entry, setEntry] = useState<JournalEntry | null>(null)
   const [loading, setLoading] = useState(true)
   const [notFound, setNotFound] = useState(false)
   const [deleting, setDeleting] = useState(false)
@@ -49,9 +50,10 @@ export default function EntryDetail({ params }: { params: Promise<{ id: string }
       setLoading(false)
     }
     getEntry()
-  }, [id])
+  }, [id, router])
 
   async function handleDelete() {
+    if (!entry) return
     if (!confirm('Delete this entry? This cannot be undone.')) return
     setDeleting(true)
     await supabase.from('entries').delete().eq('id', entry.id)
@@ -59,7 +61,7 @@ export default function EntryDetail({ params }: { params: Promise<{ id: string }
   }
 
   async function handleSaveEdit() {
-    if (!editBody.trim()) return
+    if (!entry || !editBody.trim()) return
     setSaving(true)
     const { error } = await supabase
       .from('entries')
@@ -73,6 +75,7 @@ export default function EntryDetail({ params }: { params: Promise<{ id: string }
   }
 
   async function handleToggleShare() {
+    if (!entry) return
     setSharing(true)
     if (entry.is_public) {
       if (!confirm('Remove this entry from the community feed?')) { setSharing(false); return }
@@ -116,7 +119,7 @@ export default function EntryDetail({ params }: { params: Promise<{ id: string }
     )
   }
 
-  if (notFound) {
+  if (notFound || !entry) {
     return (
       <main className="min-h-screen flex flex-col items-center justify-center"
       >

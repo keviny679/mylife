@@ -6,16 +6,17 @@ import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
 import { useWeather } from '@/lib/weather-context'
 import JournalTabs from '@/components/JournalTabs'
+import type { JournalEntry } from '@/lib/models'
 
 const moods = ['😊 good', '😐 neutral', '😔 sad']
 
 export default function Memories() {
-  const [entries, setEntries] = useState<any[]>([])
+  const [entries, setEntries] = useState<JournalEntry[]>([])
   const [loading, setLoading] = useState(true)
   const [activeMood, setActiveMood] = useState<string | null>(null)
-  const [randomMemory, setRandomMemory] = useState<any>(null)
+  const [randomMemory, setRandomMemory] = useState<JournalEntry | null>(null)
   const [openMonths, setOpenMonths] = useState<Set<string>>(new Set())
-  const [selectedEntry, setSelectedEntry] = useState<any>(null)
+  const [selectedEntry, setSelectedEntry] = useState<JournalEntry | null>(null)
   const router = useRouter()
   const { background: bg } = useWeather()
 
@@ -32,7 +33,7 @@ export default function Memories() {
         const currentMonth = new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
         setOpenMonths(new Set([currentMonth]))
         const today = new Date().toDateString()
-        const older = data.filter((e: any) => new Date(e.created_at).toDateString() !== today)
+        const older = data.filter((entry) => new Date(entry.created_at).toDateString() !== today)
         if (older.length > 0) {
           setRandomMemory(older[Math.floor(Math.random() * older.length)])
         }
@@ -40,7 +41,7 @@ export default function Memories() {
       setLoading(false)
     }
     load()
-  }, [])
+  }, [router])
 
   function toggleMonth(month: string) {
     setOpenMonths((prev) => {
@@ -51,10 +52,10 @@ export default function Memories() {
   }
 
   const filtered = activeMood
-    ? entries.filter((e: any) => e.mood === activeMood)
+    ? entries.filter((entry) => entry.mood === activeMood)
     : entries
 
-  const moodCounts = entries.reduce((acc: Record<string, number>, e: any) => {
+  const moodCounts = entries.reduce((acc: Record<string, number>, e) => {
     if (e.mood) acc[e.mood] = (acc[e.mood] || 0) + 1
     return acc
   }, {})
@@ -62,7 +63,7 @@ export default function Memories() {
   const favoriteMood = Object.entries(moodCounts)
     .sort((a, b) => (b[1] as number) - (a[1] as number))[0]?.[0] || null
 
-  const grouped = filtered.reduce((groups: Record<string, any[]>, entry: any) => {
+  const grouped = filtered.reduce((groups: Record<string, JournalEntry[]>, entry) => {
     const key = new Date(entry.created_at).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
     if (!groups[key]) groups[key] = []
     groups[key].push(entry)
@@ -107,7 +108,7 @@ export default function Memories() {
             fontStyle: 'italic',
             opacity: 0.5,
           }}>
-            everything you've written, waiting to be found again.
+            everything you&apos;ve written, waiting to be found again.
           </p>
         </div>
 
@@ -265,7 +266,7 @@ export default function Memories() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
             {Object.entries(grouped).map(([month, monthEntries]) => {
               const isOpen = openMonths.has(month)
-              const typedEntries = monthEntries as any[]
+              const typedEntries = monthEntries
               return (
                 <div key={month} style={{
                   background: bg.cardBg,
@@ -306,7 +307,7 @@ export default function Memories() {
                   {/* Entries — Your Name style */}
                   {isOpen && (
                     <div style={{ borderTop: `1px solid ${bg.cardBorder}` }}>
-                      {typedEntries.map((entry: any, index: number) => {
+                      {typedEntries.map((entry, index) => {
                         const entryDate = new Date(entry.created_at)
                         const dayNum = entryDate.getDate()
                         const dayAbbr = entryDate.toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase()

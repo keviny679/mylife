@@ -7,6 +7,8 @@ import { supabase } from '@/lib/supabase'
 import { useWeather } from '@/lib/weather-context'
 import { formatWeatherStamp, getWeatherCategory } from '@/lib/weather'
 import JournalTabs from '@/components/JournalTabs'
+import type { User } from '@supabase/supabase-js'
+import type { JournalEntry } from '@/lib/models'
 
 const moodOptions = [
   { value: '😊 good', label: 'good' },
@@ -27,7 +29,7 @@ function getLocalMoment(date: Date) {
   }
 }
 
-function calculateStreak(entries: any[]): number {
+function calculateStreak(entries: JournalEntry[]): number {
   if (entries.length === 0) return 0
   const uniqueDates = [...new Set(
     entries.map(e => new Date(e.created_at).toLocaleDateString('en-CA'))
@@ -46,7 +48,7 @@ function calculateStreak(entries: any[]): number {
   return streak
 }
 
-function calculateLongestStreak(entries: any[]): number {
+function calculateLongestStreak(entries: JournalEntry[]): number {
   if (entries.length === 0) return 0
   const uniqueDates = [...new Set(
     entries.map(e => new Date(e.created_at).toLocaleDateString('en-CA'))
@@ -74,8 +76,8 @@ function getMilestoneMessage(streak: number): string | null {
 
 export default function Journal() {
   const autoLocationRequested = useRef(false)
-  const [user, setUser] = useState<any>(null)
-  const [entries, setEntries] = useState<any[]>([])
+  const [user, setUser] = useState<User | null>(null)
+  const [entries, setEntries] = useState<JournalEntry[]>([])
   const [loading, setLoading] = useState(true)
   const [title, setTitle] = useState('')
   const [body, setBody] = useState('')
@@ -94,9 +96,6 @@ export default function Journal() {
 
   const bg = background
   const now = new Date()
-  const hour = now.getHours()
-  const timeStr = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
-
   useEffect(() => {
     async function getUser() {
       const { data: { user } } = await supabase.auth.getUser()
@@ -110,7 +109,7 @@ export default function Journal() {
       setLoading(false)
     }
     getUser()
-  }, [])
+  }, [router])
 
   useEffect(() => {
     if (!user || locationStatus !== 'idle' || autoLocationRequested.current) return
@@ -119,7 +118,7 @@ export default function Journal() {
   }, [user, locationStatus, requestLocation])
 
   async function handleSaveEntry() {
-    if (!body.trim()) return
+    if (!user || !body.trim()) return
     if (body.length > 50000) {
       alert('Entry is too long. Please keep it under 50,000 characters.')
       return

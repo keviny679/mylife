@@ -3,12 +3,13 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useAtmosphere } from '@/lib/atmosphere'
+import type { JournalEntry } from '@/lib/models'
 
 export default function Community() {
-  const [entries, setEntries] = useState<any[]>([])
+  const [entries, setEntries] = useState<JournalEntry[]>([])
   const [loading, setLoading] = useState(true)
   const [isAdmin, setIsAdmin] = useState(false)
-  const [selectedEntry, setSelectedEntry] = useState<any>(null)
+  const [selectedEntry, setSelectedEntry] = useState<JournalEntry | null>(null)
   const { background: bg, t } = useAtmosphere()
 
   useEffect(() => {

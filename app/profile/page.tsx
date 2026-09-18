@@ -5,8 +5,9 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
 import { useAtmosphere } from '@/lib/atmosphere'
+import type { EntryWithWordCount, JournalEntry, UserProfile } from '@/lib/models'
 
-function calculateStreak(entries: any[]): number {
+function calculateStreak(entries: JournalEntry[]): number {
   if (entries.length === 0) return 0
   const uniqueDates = [...new Set(
     entries.map(e => new Date(e.created_at).toLocaleDateString('en-CA'))
@@ -25,7 +26,7 @@ function calculateStreak(entries: any[]): number {
   return streak
 }
 
-function calculateLongestStreak(entries: any[]): number {
+function calculateLongestStreak(entries: JournalEntry[]): number {
   if (entries.length === 0) return 0
   const uniqueDates = [...new Set(
     entries.map(e => new Date(e.created_at).toLocaleDateString('en-CA'))
@@ -40,8 +41,8 @@ function calculateLongestStreak(entries: any[]): number {
 }
 
 export default function Profile() {
-  const [profile, setProfile] = useState<any>(null)
-  const [entries, setEntries] = useState<any[]>([])
+  const [profile, setProfile] = useState<UserProfile | null>(null)
+  const [entries, setEntries] = useState<JournalEntry[]>([])
   const [loading, setLoading] = useState(true)
   const [editing, setEditing] = useState(false)
   const [newName, setNewName] = useState('')
@@ -64,11 +65,12 @@ export default function Profile() {
       setLoading(false)
     }
     load()
-  }, [])
+  }, [router])
 
   async function handleSaveName() {
     if (!newName.trim()) return
     setSaving(true)
+    if (!profile) return
     await supabase.from('profiles').update({ display_name: newName.trim() }).eq('id', profile.id)
     setProfile({ ...profile, display_name: newName.trim() })
     setEditing(false)
@@ -76,7 +78,8 @@ export default function Profile() {
   }
 
   const totalWords = entries.reduce((acc, e) => acc + (e.body ? e.body.trim().split(/\s+/).length : 0), 0)
-  const thirtyDaysAgo = new Date(Date.now() - 30 * 86400000)
+  const thirtyDaysAgo = new Date()
+  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
   const recentEntries = entries.filter(e => new Date(e.created_at) > thirtyDaysAgo)
   const uniqueRecentDays = new Set(recentEntries.map(e => new Date(e.created_at).toLocaleDateString('en-CA'))).size
   const hourCounts = entries.reduce((acc: Record<number, number>, e) => {
@@ -95,7 +98,7 @@ export default function Profile() {
   const longestEntry = entries.reduce((longest, e) => {
     const count = e.body ? e.body.trim().split(/\s+/).length : 0
     return count > (longest?.wordCount || 0) ? { ...e, wordCount: count } : longest
-  }, null as any)
+  }, null as EntryWithWordCount | null)
   const memberSince = profile?.created_at
     ? new Date(profile.created_at).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
     : '—'

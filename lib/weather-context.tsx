@@ -1,6 +1,7 @@
 'use client'
 
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react'
+import { createContext, useContext, useState, useEffect, useMemo } from 'react'
+import type { ReactNode } from 'react'
 import {
   WeatherData,
   TimeOfDay,
@@ -69,26 +70,28 @@ async function reverseGeocode(lat: number, lon: number): Promise<string> {
 export function WeatherProvider({ children }: { children: ReactNode }) {
   const [weather, setWeather] = useState<WeatherData | null>(null)
   const [timeOfDay, setTimeOfDay] = useState<TimeOfDay>(getTimeOfDay())
-  const [background, setBackground] = useState<BackgroundConfig>(defaultBg)
   const [location, setLocation] = useState<{ lat: number; lon: number } | null>(null)
   const [cityName, setCityName] = useState<string>('')
   const [locationStatus, setLocationStatus] = useState<WeatherContextType['locationStatus']>('checking')
   const [locationMessage, setLocationMessage] = useState('')
 
-  // Update time every minute
+  const background = useMemo(() => {
+    const category = weather
+      ? getWeatherCategory(weather.conditionCode, weather.isDay)
+      : 'clear'
+    return getBackgroundConfig(timeOfDay, category)
+  }, [timeOfDay, weather])
+
+  // Time and weather are the only theme inputs. Keeping the background derived
+  // prevents route transitions or competing effects from restoring stale colors.
   useEffect(() => {
     function tick() {
-      const time = getTimeOfDay()
-      setTimeOfDay(time)
-      const category = weather
-        ? getWeatherCategory(weather.conditionCode, weather.isDay)
-        : 'clear'
-      setBackground(getBackgroundConfig(time, category))
+      setTimeOfDay(getTimeOfDay())
     }
     tick()
     const interval = setInterval(tick, 60000)
     return () => clearInterval(interval)
-  }, [weather])
+  }, [])
 
   // Load saved location from profile on mount
   useEffect(() => {
@@ -114,15 +117,15 @@ export function WeatherProvider({ children }: { children: ReactNode }) {
       const loc = { lat: profile.latitude, lon: profile.longitude }
       setLocation(loc)
 
-      // Reverse geocode for accurate city name
-      const city = await reverseGeocode(loc.lat, loc.lon)
+      // Location naming and weather are independent network requests.
+      const [city, w] = await Promise.all([
+        reverseGeocode(loc.lat, loc.lon),
+        fetchWeather(loc.lat, loc.lon),
+      ])
       setCityName(city)
 
-      const w = await fetchWeather(loc.lat, loc.lon)
       if (w) {
         setWeather(w)
-        const time = getTimeOfDay()
-        setBackground(getBackgroundConfig(time, getWeatherCategory(w.conditionCode, w.isDay)))
         setLocationStatus('ready')
         setLocationMessage('')
       } else {
@@ -132,6 +135,19 @@ export function WeatherProvider({ children }: { children: ReactNode }) {
     }
     loadSavedLocation()
   }, [])
+
+  // Refresh conditions in place so a long-lived tab does not keep the weather
+  // (and therefore the atmosphere) from the time it was first opened.
+  useEffect(() => {
+    if (!location) return
+
+    const interval = setInterval(async () => {
+      const nextWeather = await fetchWeather(location.lat, location.lon)
+      if (nextWeather) setWeather(nextWeather)
+    }, 10 * 60 * 1000)
+
+    return () => clearInterval(interval)
+  }, [location])
 
   async function requestLocation() {
     setLocationStatus('loading')
@@ -181,8 +197,6 @@ export function WeatherProvider({ children }: { children: ReactNode }) {
     const w = await fetchWeather(loc.lat, loc.lon)
     if (w) {
       setWeather(w)
-      const time = getTimeOfDay()
-      setBackground(getBackgroundConfig(time, getWeatherCategory(w.conditionCode, w.isDay)))
       setLocationStatus('ready')
       setLocationMessage('')
     } else {

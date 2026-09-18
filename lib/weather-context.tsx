@@ -25,7 +25,11 @@ interface WeatherContextType {
   requestLocation: () => Promise<void>
 }
 
-const defaultTime = getTimeOfDay()
+// Server rendering runs in the deployment region's timezone while the journal
+// must follow the reader's browser. Start both server and client from the same
+// deterministic value, then replace it with local time after hydration. This
+// avoids React preserving a mismatched server-rendered background style.
+const defaultTime: TimeOfDay = { period: 'morning', hour: 8, label: 'Morning' }
 const defaultBg = getBackgroundConfig(defaultTime, 'clear')
 
 const WeatherContext = createContext<WeatherContextType>({
@@ -69,7 +73,7 @@ async function reverseGeocode(lat: number, lon: number): Promise<string> {
 
 export function WeatherProvider({ children }: { children: ReactNode }) {
   const [weather, setWeather] = useState<WeatherData | null>(null)
-  const [timeOfDay, setTimeOfDay] = useState<TimeOfDay>(getTimeOfDay())
+  const [timeOfDay, setTimeOfDay] = useState<TimeOfDay>(defaultTime)
   const [location, setLocation] = useState<{ lat: number; lon: number } | null>(null)
   const [cityName, setCityName] = useState<string>('')
   const [locationStatus, setLocationStatus] = useState<WeatherContextType['locationStatus']>('checking')

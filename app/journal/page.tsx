@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
@@ -73,6 +73,7 @@ function getMilestoneMessage(streak: number): string | null {
 }
 
 export default function Journal() {
+  const autoLocationRequested = useRef(false)
   const [user, setUser] = useState<any>(null)
   const [entries, setEntries] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
@@ -110,6 +111,12 @@ export default function Journal() {
     }
     getUser()
   }, [])
+
+  useEffect(() => {
+    if (!user || locationStatus !== 'idle' || autoLocationRequested.current) return
+    autoLocationRequested.current = true
+    void requestLocation()
+  }, [user, locationStatus, requestLocation])
 
   async function handleSaveEntry() {
     if (!body.trim()) return
@@ -300,13 +307,13 @@ export default function Journal() {
                   {cityName || weather.location}
                 </span>
               </>
-            ) : locationStatus === 'loading' ? (
+            ) : locationStatus === 'checking' || locationStatus === 'loading' ? (
               <span style={{
                 fontSize: '11px', color: bg.textColor,
                 opacity: 0.55, letterSpacing: '0.08em',
                 fontFamily: 'var(--font-lora)', fontStyle: 'italic',
               }}>
-                finding your location…
+                {locationStatus === 'checking' ? 'checking local weather…' : 'finding your location…'}
               </span>
             ) : (
               <button

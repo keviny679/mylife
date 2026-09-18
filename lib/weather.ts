@@ -208,13 +208,13 @@ export function getBackgroundConfig(time: TimeOfDay, weatherCategory: string): B
       }
     case 'golden-hour-am':
       return {
-        gradient: 'linear-gradient(180deg, #87CEEB 0%, #f0c87a 60%, #f8a050 100%)',
-        textColor: '#2a1a0a',
-        cardBg: 'rgba(255,252,245,0.94)',
-        cardBorder: 'rgba(200,150,80,0.25)',
-        accentColor: '#c87a30',
-        secondaryText: '#4a2a10',
-        dimText: '#9a7a50',
+        gradient: 'linear-gradient(180deg, #78b9da 0%, #b9ddeb 48%, #f7fbfd 100%)',
+        textColor: '#18384a',
+        cardBg: 'rgba(255,255,255,0.94)',
+        cardBorder: 'rgba(92,155,190,0.22)',
+        accentColor: '#3a82ad',
+        secondaryText: '#28566f',
+        dimText: '#739caf',
       }
     case 'midday':
       return {

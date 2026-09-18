@@ -19,7 +19,7 @@ interface WeatherContextType {
   background: BackgroundConfig
   location: { lat: number; lon: number } | null
   cityName: string
-  locationStatus: 'idle' | 'loading' | 'ready' | 'denied' | 'unavailable' | 'error'
+  locationStatus: 'checking' | 'idle' | 'loading' | 'ready' | 'denied' | 'unavailable' | 'error'
   locationMessage: string
   requestLocation: () => Promise<void>
 }
@@ -33,7 +33,7 @@ const WeatherContext = createContext<WeatherContextType>({
   background: defaultBg,
   location: null,
   cityName: '',
-  locationStatus: 'idle',
+  locationStatus: 'checking',
   locationMessage: '',
   requestLocation: async () => {},
 })
@@ -72,7 +72,7 @@ export function WeatherProvider({ children }: { children: ReactNode }) {
   const [background, setBackground] = useState<BackgroundConfig>(defaultBg)
   const [location, setLocation] = useState<{ lat: number; lon: number } | null>(null)
   const [cityName, setCityName] = useState<string>('')
-  const [locationStatus, setLocationStatus] = useState<WeatherContextType['locationStatus']>('idle')
+  const [locationStatus, setLocationStatus] = useState<WeatherContextType['locationStatus']>('checking')
   const [locationMessage, setLocationMessage] = useState('')
 
   // Update time every minute
@@ -94,34 +94,40 @@ export function WeatherProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     async function loadSavedLocation() {
       const { data: { user } } = await supabase.auth.getUser()
-      if (!user) return
+      if (!user) {
+        setLocationStatus('idle')
+        return
+      }
 
-      const { data: profile } = await supabase
+      const { data: profile, error } = await supabase
         .from('profiles')
         .select('latitude, longitude')
         .eq('id', user.id)
         .single()
 
-      if (profile?.latitude != null && profile?.longitude != null) {
-        setLocationStatus('loading')
-        const loc = { lat: profile.latitude, lon: profile.longitude }
-        setLocation(loc)
+      if (error || profile?.latitude == null || profile?.longitude == null) {
+        setLocationStatus('idle')
+        return
+      }
 
-        // Reverse geocode for accurate city name
-        const city = await reverseGeocode(loc.lat, loc.lon)
-        setCityName(city)
+      setLocationStatus('loading')
+      const loc = { lat: profile.latitude, lon: profile.longitude }
+      setLocation(loc)
 
-        const w = await fetchWeather(loc.lat, loc.lon)
-        if (w) {
-          setWeather(w)
-          const time = getTimeOfDay()
-          setBackground(getBackgroundConfig(time, getWeatherCategory(w.conditionCode, w.isDay)))
-          setLocationStatus('ready')
-          setLocationMessage('')
-        } else {
-          setLocationStatus('error')
-          setLocationMessage('Weather is unavailable right now. Tap to try again.')
-        }
+      // Reverse geocode for accurate city name
+      const city = await reverseGeocode(loc.lat, loc.lon)
+      setCityName(city)
+
+      const w = await fetchWeather(loc.lat, loc.lon)
+      if (w) {
+        setWeather(w)
+        const time = getTimeOfDay()
+        setBackground(getBackgroundConfig(time, getWeatherCategory(w.conditionCode, w.isDay)))
+        setLocationStatus('ready')
+        setLocationMessage('')
+      } else {
+        setLocationStatus('error')
+        setLocationMessage('Weather is unavailable right now. Tap to try again.')
       }
     }
     loadSavedLocation()

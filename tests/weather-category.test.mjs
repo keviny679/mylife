@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { getWeatherCategory } from '../lib/weather.ts'
+import { getBackgroundConfig, getWeatherCategory } from '../lib/weather.ts'
 
 test('uses day and night variants for clear conditions', () => {
   assert.equal(getWeatherCategory(1000, true), 'clear')
@@ -30,4 +30,14 @@ test('classifies rain, snow, and thunder families', () => {
 
 test('falls back conservatively for newly introduced codes', () => {
   assert.equal(getWeatherCategory(9999, true), 'cloudy')
+})
+
+test('keeps the late-morning atmosphere blue and white', () => {
+  const background = getBackgroundConfig(
+    { period: 'golden-hour-am', hour: 10, label: 'Morning' },
+    'overcast'
+  )
+
+  assert.equal(background.gradient, 'linear-gradient(180deg, #78b9da 0%, #b9ddeb 48%, #f7fbfd 100%)')
+  assert.equal(background.accentColor, '#3a82ad')
 })
